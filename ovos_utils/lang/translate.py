@@ -22,6 +22,7 @@ def translate_text(text, lang="en-us", source_lang=None):
     if not tx:
         LOG.warning("Falling back to google translate")
         return translate_google(text, lang, source_lang)
+    return tx
 
 
 def translate_to_mp3(sentence, lang="en-us", mp3_file=None):
