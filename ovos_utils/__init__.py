@@ -17,6 +17,7 @@
 
 from threading import Thread
 from time import sleep
+import requests
 import os
 from os.path import  isdir, join
 import re
@@ -35,6 +36,10 @@ def get_ip():
     finally:
         s.close()
     return IP
+
+
+def get_external_ip():
+    return requests.get('https://api.ipify.org').text
 
 
 def get_mycroft_root():
