@@ -110,8 +110,8 @@ def detect_lang_google(text, return_dict=False):
     translator = google_translator()
     tx = translator.detect(text)
     if return_dict:
-        return {"lang_code": tx.lang, "conf": tx.confidence, "lang": code_to_name(tx.lang)}
-    return tx.lang
+        return {"lang_code": tx[0], "lang": tx[1]}
+    return tx[0]
 
 
 def detect_lang(text, return_dict=False):
@@ -121,6 +121,7 @@ def detect_lang(text, return_dict=False):
 
 
 if __name__ == "__main__":
+    assert detect_lang_google("olá eu chamo-me joaquim") == "pt"
     assert detect_lang_naive("olá eu chamo-me joaquim", return_dict=True) == \
            {'lang': 'Portuguese', 'lang_code': 'pt', 'conf': 0.96}
 
