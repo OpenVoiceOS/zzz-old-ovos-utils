@@ -1,5 +1,6 @@
 from ovos_utils.log import LOG
-from ovos_utils.system import get_default_mycroft_core_location, MycroftRootLocations
+from ovos_utils.enclosure import enclosure2rootdir, detect_enclosure
+from ovos_utils.enclosure import MycroftEnclosures
 from ovos_utils.json_helper import merge_dict, load_commented_json
 from os.path import isfile, exists, expanduser, join, dirname, isdir
 from os import makedirs
@@ -103,21 +104,16 @@ class ReadOnlyConfig(LocalConf):
 class MycroftUserConfig(LocalConf):
     def __init__(self):
         path = MYCROFT_USER_CONFIG
-        if get_default_mycroft_core_location() == MycroftRootLocations.MARK1 or \
-                get_default_mycroft_core_location() == MycroftRootLocations.OLD_MARK1:
+        enclosure = detect_enclosure()
+        if enclosure == MycroftEnclosures.MARK1 or \
+                enclosure == MycroftEnclosures.OLD_MARK1:
             path = "/home/mycroft/.mycroft/mycroft.conf"
         super().__init__(path)
 
 
 class MycroftDefaultConfig(ReadOnlyConfig):
     def __init__(self):
-        path = None
-        for p in MycroftRootLocations:
-            # enum is ordered so last match is the most important
-            # (supposed to override previous)
-            p = join(p, "mycroft", "configuration", "mycroft.conf")
-            if isfile(p):
-                path = p
+        path = enclosure2rootdir()
         super().__init__(path)
         if not self.path or not isfile(self.path):
             LOG.warning("mycroft root path not found")
