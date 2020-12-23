@@ -113,14 +113,15 @@ class MycroftUserConfig(LocalConf):
 
 class MycroftDefaultConfig(ReadOnlyConfig):
     def __init__(self):
-        path = enclosure2rootdir()
+        path = join(enclosure2rootdir(), "mycroft",
+                    "configuration", "mycroft.conf")
         super().__init__(path)
         if not self.path or not isfile(self.path):
             LOG.warning("mycroft root path not found")
 
-    def set_mycroft_root(self, mycroft_root_path):
+    def set_root_config_path(self, root_config):
         # in case we got it wrong / non standard
-        self.path = join(mycroft_root_path, "mycroft", "configuration", "mycroft.conf")
+        self.path = root_config
         self.reload()
 
 

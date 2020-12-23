@@ -17,10 +17,6 @@ class MycroftRootLocations(str, Enum):
     MARK2 = "/home/mycroft/mycroft-core"  # TODO mark2 here
 
 
-def is_default_root_location():
-    return search_mycroft_core_location() is not None
-
-
 def search_mycroft_core_location():
     for p in MycroftRootLocations:
         if os.path.isdir(p):
