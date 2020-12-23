@@ -1,4 +1,5 @@
 from ovos_utils.log import LOG
+from ovos_utils.system import get_default_mycroft_core_location, MycroftRootLocations
 from ovos_utils.json_helper import merge_dict, load_commented_json
 from os.path import isfile, exists, expanduser, join, dirname, isdir
 from os import makedirs
@@ -102,32 +103,18 @@ class ReadOnlyConfig(LocalConf):
 class MycroftUserConfig(LocalConf):
     def __init__(self):
         path = MYCROFT_USER_CONFIG
-        if self._is_mycroft_device():
+        if get_default_mycroft_core_location() == MycroftRootLocations.MARK1 or \
+                get_default_mycroft_core_location() == MycroftRootLocations.OLD_MARK1:
             path = "/home/mycroft/.mycroft/mycroft.conf"
         super().__init__(path)
-
-    @staticmethod
-    def _is_mycroft_device():
-        paths = [
-            "/opt/venvs/mycroft-core/lib/python3.7/site-packages/",  # mark1/2
-            "/opt/venvs/mycroft-core/lib/python3.4/site-packages/ "  # old mark1 installs
-        ]
-        for p in paths:
-            if isdir(p):
-                return True
-        return False
 
 
 class MycroftDefaultConfig(ReadOnlyConfig):
     def __init__(self):
         path = None
-        # TODO check system config platform and go directly to correct path if it exists
-        paths = [
-            "/opt/venvs/mycroft-core/lib/python3.7/site-packages/",  # mark1/2
-            "/opt/venvs/mycroft-core/lib/python3.4/site-packages/ ",  # old mark1 installs
-            "/home/pi/mycroft-core"  # picroft
-        ]
-        for p in paths:
+        for p in MycroftRootLocations:
+            # enum is ordered so last match is the most important
+            # (supposed to override previous)
             p = join(p, "mycroft", "configuration", "mycroft.conf")
             if isfile(p):
                 path = p
@@ -136,6 +123,7 @@ class MycroftDefaultConfig(ReadOnlyConfig):
             LOG.warning("mycroft root path not found")
 
     def set_mycroft_root(self, mycroft_root_path):
+        # in case we got it wrong / non standard
         self.path = join(mycroft_root_path, "mycroft", "configuration", "mycroft.conf")
         self.reload()
 

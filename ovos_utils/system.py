@@ -3,6 +3,27 @@ import sys
 import os
 import subprocess
 import re
+from enum import Enum
+import platform
+
+
+class MycroftRootLocations(str, Enum):
+    PICROFT = "/home/pi/mycroft-core"
+    BIGSCREEN = "/home/mycroft/mycroft-core"
+    OVOS = "/home/mycroft/mycroft-core"  # TODO ovos here
+    OLD_MARK1 = "/opt/venvs/mycroft-core/lib/python3.4/site-packages/"
+    MARK1 = "/opt/venvs/mycroft-core/lib/python3.7/site-packages/"
+
+
+def is_default_root_location():
+    return get_default_mycroft_core_location() is not None
+
+
+def get_default_mycroft_core_location():
+    for p in MycroftRootLocations:
+        if os.path.isdir(p):
+            return p
+    return None
 
 
 def get_desktop_environment():
@@ -66,6 +87,33 @@ def is_process_running(process):
         if re.search(process, x):
             return True
     return False
+
+
+def get_platform_fingerprint():
+    # TODO hostname
+
+    # TODO avoid circular import
+    from ovos_utils.configuration import read_mycroft_config
+    conf = read_mycroft_config()
+    listener_conf = conf.get("listener", {})
+    return {
+        "platform": platform.platform(),
+        "enclosure": conf.get("enclosure", {}).get("platform"),
+        "python_version": platform.python_version(),
+        "system": platform.system(),
+        "version": platform.version(),
+        "arch": platform.machine(),
+        "release": platform.release(),
+        "node": platform.node(),
+        "desktop_env": get_desktop_environment(),
+        "ipc_path": conf.get("ipc_path"),
+        "input_device_name": listener_conf.get("device_name"),
+        "input_device_index": listener_conf.get("device_index"),
+        "default_audio_backend": conf.get("Audio", {}).get("default-backend"),
+        "priority_skills": conf.get("skills", {}).get("priority_skills"),
+        "backend_url": conf.get("server", {}).get("url"),
+        "mycroft_core_location": get_default_mycroft_core_location()
+    }
 
 
 def ntp_sync():
