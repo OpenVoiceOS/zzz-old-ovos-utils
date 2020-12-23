@@ -96,6 +96,7 @@ def get_platform_fingerprint():
     from ovos_utils.configuration import read_mycroft_config
     conf = read_mycroft_config()
     listener_conf = conf.get("listener", {})
+    skills_conf = conf.get("skills", {})
     return {
         "platform": platform.platform(),
         "enclosure": conf.get("enclosure", {}).get("platform"),
@@ -103,6 +104,8 @@ def get_platform_fingerprint():
         "system": platform.system(),
         "version": platform.version(),
         "arch": platform.machine(),
+        "data_dir": conf.get("data_dir"),
+        "msm_skills_dir":  skills_conf.get("msm", {}).get("directory"),
         "release": platform.release(),
         "node": platform.node(),
         "desktop_env": get_desktop_environment(),
@@ -110,7 +113,7 @@ def get_platform_fingerprint():
         "input_device_name": listener_conf.get("device_name"),
         "input_device_index": listener_conf.get("device_index"),
         "default_audio_backend": conf.get("Audio", {}).get("default-backend"),
-        "priority_skills": conf.get("skills", {}).get("priority_skills"),
+        "priority_skills": skills_conf.get("priority_skills"),
         "backend_url": conf.get("server", {}).get("url"),
         "mycroft_core_location": get_default_mycroft_core_location()
     }

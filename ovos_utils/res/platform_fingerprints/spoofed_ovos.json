@@ -12,6 +12,8 @@
     "input_device_name": "OpenVoiceOS",
     "input_device_index": null,
     "default_audio_backend": "vlc",
+    "msm_skills_dir": "skills",
+    "data_dir": "/opt/mycroft",
     "priority_skills": [
         "mycroft-pairing",
         "mycroft-volume"
