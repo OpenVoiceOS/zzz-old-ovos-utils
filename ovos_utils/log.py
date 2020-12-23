@@ -73,6 +73,7 @@ class LOG:
 
     @classmethod
     def set_level(cls, level):
+        cls.level = level
         for l in cls._loggers:
             cls._loggers[l].setLevel(level)
 
