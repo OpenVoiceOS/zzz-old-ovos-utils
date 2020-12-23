@@ -5,6 +5,7 @@ import subprocess
 import re
 from enum import Enum
 import platform
+from ovos_utils.display import can_display,  is_gui_installed
 
 
 class MycroftRootLocations(str, Enum):
@@ -84,7 +85,7 @@ def is_process_running(process):
     except:  # Windows
         s = subprocess.Popen(["tasklist", "/v"], stdout=subprocess.PIPE)
     for x in s.stdout:
-        if re.search(process, x):
+        if re.search(process, x.decode("utf-8")):
             return True
     return False
 
@@ -115,7 +116,10 @@ def get_platform_fingerprint():
         "default_audio_backend": conf.get("Audio", {}).get("default-backend"),
         "priority_skills": skills_conf.get("priority_skills"),
         "backend_url": conf.get("server", {}).get("url"),
-        "mycroft_core_location": get_default_mycroft_core_location()
+        "mycroft_core_location": get_default_mycroft_core_location(),
+        "can_display": can_display(),
+        "is_gui_installed": is_gui_installed(),
+        "pulseaudio_running": is_process_running("pulseaudio")
     }
 
 

@@ -19,5 +19,8 @@
         "mycroft-volume"
     ],
     "backend_url": "https://api.mycroft.ai",
-    "mycroft_core_location": null
+    "mycroft_core_location": null,
+    "can_display": true,
+    "is_gui_installed": true,
+    "pulseaudio_running": true
 }
