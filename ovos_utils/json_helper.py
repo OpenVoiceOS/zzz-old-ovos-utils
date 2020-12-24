@@ -23,10 +23,10 @@ def merge_dict(base, delta, merge_lists=False, skip_empty=False, no_dupes=True):
                 # dont replace if new entry is empty
                 pass
             elif all((isinstance(b, list), isinstance(d, list), merge_lists)):
-                base[k] += d
                 if no_dupes:
-                    # deduplicate
-                    base[k] = list(set(base[k]))
+                    base[k] += [item for item in d if item not in base[k]]
+                else:
+                    base[k] += d
             else:
                 base[k] = d
     return base
@@ -132,7 +132,8 @@ def get_key_recursively(search_dict, field, filter_None=True):
                     except:
                         continue  # can't parse
                 else:
-                    fields_found += get_key_recursively(item, field, filter_None)
+                    fields_found += get_key_recursively(item,
+                                                        field, filter_None)
 
     return fields_found
 
@@ -158,7 +159,8 @@ def get_key_recursively_fuzzy(search_dict, field, thresh=0.6, filter_None=True):
         if score >= thresh:
             fields_found.append((search_dict, score))
         elif isinstance(value, dict):
-            fields_found += get_key_recursively_fuzzy(value, field, thresh, filter_None)
+            fields_found += get_key_recursively_fuzzy(
+                value, field, thresh, filter_None)
 
         elif isinstance(value, list):
             for item in value:
@@ -169,8 +171,9 @@ def get_key_recursively_fuzzy(search_dict, field, thresh=0.6, filter_None=True):
                     except:
                         continue  # can't parse
                 else:
-                    fields_found += get_key_recursively_fuzzy(item, field, thresh, filter_None)
-    return sorted(fields_found, key = lambda i: i[1],reverse=True)
+                    fields_found += get_key_recursively_fuzzy(
+                        item, field, thresh, filter_None)
+    return sorted(fields_found, key=lambda i: i[1], reverse=True)
 
 
 def get_value_recursively(search_dict, field, target_value):
@@ -200,7 +203,8 @@ def get_value_recursively(search_dict, field, target_value):
                     except:
                         continue  # can't parse
                 else:
-                    fields_found += get_value_recursively(item, field, target_value)
+                    fields_found += get_value_recursively(
+                        item, field, target_value)
 
     return fields_found
 
@@ -226,21 +230,24 @@ def get_value_recursively_fuzzy(search_dict, field, target_value, thresh=0.6):
                     if score >= thresh:
                         fields_found.append((search_dict, score))
         elif isinstance(value, dict):
-            fields_found += get_value_recursively_fuzzy(value, field, target_value, thresh)
+            fields_found += get_value_recursively_fuzzy(
+                value, field, target_value, thresh)
 
         elif isinstance(value, list):
             for item in value:
                 if not isinstance(item, dict):
                     try:
-                        found = get_value_recursively_fuzzy(item.__dict__, field, target_value, thresh)
+                        found = get_value_recursively_fuzzy(
+                            item.__dict__, field, target_value, thresh)
                         if len(found):
                             fields_found.append((item, found[0][1]))
                     except:
                         continue  # can't parse
                 else:
-                    fields_found += get_value_recursively_fuzzy(item, field, target_value, thresh)
+                    fields_found += get_value_recursively_fuzzy(
+                        item, field, target_value, thresh)
 
-    return sorted(fields_found, key = lambda i: i[1],reverse=True)
+    return sorted(fields_found, key=lambda i: i[1], reverse=True)
 
 
 def jsonify_recursively(thing):
