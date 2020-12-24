@@ -37,11 +37,12 @@ class TestJsonHelpers(unittest.TestCase):
         )
 
     # Difficult to test because order is not currently guaranteed.
-    # def test_merge_dict_no_dupes(self):
-    #
-    #     self.assertEqual(
-    #         merge_dict(deepcopy(self.base_dict), deepcopy(self.delta_dict), merge_lists=True,
-    #                    skip_empty=True, no_dupes=True),
-    #         {"one": 1, "two": 2, "three": 30, "four": [
-    #             "foo", "bar", "baz", 4, 5, 6], "five": 50}
-    #     )
+
+    def test_merge_dict_no_dupes(self):
+
+        self.assertEqual(
+            merge_dict(deepcopy(self.base_dict), deepcopy(self.delta_dict), merge_lists=True,
+                       skip_empty=True, no_dupes=True),
+            {"one": 1, "two": 2, "three": 30, "four": [
+                "foo", "bar", "baz", 4, 5, 6], "five": 50}
+        )
