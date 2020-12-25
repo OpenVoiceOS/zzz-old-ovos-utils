@@ -2,7 +2,8 @@ import json
 from ovos_utils.parse import fuzzy_match
 
 
-def merge_dict(base, delta, merge_lists=False, skip_empty=False, no_dupes=True):
+def merge_dict(base, delta, merge_lists=False, skip_empty=False,
+               no_dupes=True, new_only=False):
     """
         Recursively merging configuration dictionaries.
 
@@ -12,13 +13,16 @@ def merge_dict(base, delta, merge_lists=False, skip_empty=False, no_dupes=True):
             merge_lists: if a list is found merge contents instead of replacing
             skip_empty: if an item in delta is empty, dont overwrite base
             no_dupes: when merging lists deduplicate entries
+            new_only: only merge keys not yet in base
     """
 
     for k, d in delta.items():
         b = base.get(k)
         if isinstance(d, dict) and isinstance(b, dict):
-            merge_dict(b, d)
+            merge_dict(b, d, merge_lists, skip_empty, no_dupes, new_only)
         else:
+            if new_only and k in base:
+                continue
             if skip_empty and not d:
                 # dont replace if new entry is empty
                 pass
