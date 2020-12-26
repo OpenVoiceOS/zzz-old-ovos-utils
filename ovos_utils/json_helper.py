@@ -5,7 +5,8 @@ from ovos_utils.parse import fuzzy_match
 def merge_dict(base, delta, merge_lists=False, skip_empty=False,
                no_dupes=True, new_only=False):
     """
-        Recursively merging configuration dictionaries.
+        Recursively merges two dictionaries
+        including dictionaries within dictionaries.
 
         Args:
             base:  Target for merge
