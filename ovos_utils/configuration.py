@@ -1,4 +1,6 @@
 from ovos_utils.log import LOG
+from ovos_utils.enclosure import enclosure2rootdir, detect_enclosure
+from ovos_utils.enclosure import MycroftEnclosures
 from ovos_utils.json_helper import merge_dict, load_commented_json
 from os.path import isfile, exists, expanduser, join, dirname, isdir
 from os import makedirs
@@ -102,41 +104,24 @@ class ReadOnlyConfig(LocalConf):
 class MycroftUserConfig(LocalConf):
     def __init__(self):
         path = MYCROFT_USER_CONFIG
-        if self._is_mycroft_device():
+        enclosure = detect_enclosure()
+        if enclosure == MycroftEnclosures.MARK1 or \
+                enclosure == MycroftEnclosures.OLD_MARK1:
             path = "/home/mycroft/.mycroft/mycroft.conf"
         super().__init__(path)
-
-    @staticmethod
-    def _is_mycroft_device():
-        paths = [
-            "/opt/venvs/mycroft-core/lib/python3.7/site-packages/",  # mark1/2
-            "/opt/venvs/mycroft-core/lib/python3.4/site-packages/ "  # old mark1 installs
-        ]
-        for p in paths:
-            if isdir(p):
-                return True
-        return False
 
 
 class MycroftDefaultConfig(ReadOnlyConfig):
     def __init__(self):
-        path = None
-        # TODO check system config platform and go directly to correct path if it exists
-        paths = [
-            "/opt/venvs/mycroft-core/lib/python3.7/site-packages/",  # mark1/2
-            "/opt/venvs/mycroft-core/lib/python3.4/site-packages/ ",  # old mark1 installs
-            "/home/pi/mycroft-core"  # picroft
-        ]
-        for p in paths:
-            p = join(p, "mycroft", "configuration", "mycroft.conf")
-            if isfile(p):
-                path = p
+        path = join(enclosure2rootdir(), "mycroft",
+                    "configuration", "mycroft.conf")
         super().__init__(path)
         if not self.path or not isfile(self.path):
             LOG.warning("mycroft root path not found")
 
-    def set_mycroft_root(self, mycroft_root_path):
-        self.path = join(mycroft_root_path, "mycroft", "configuration", "mycroft.conf")
+    def set_root_config_path(self, root_config):
+        # in case we got it wrong / non standard
+        self.path = root_config
         self.reload()
 
 
@@ -161,33 +146,3 @@ def update_mycroft_config(config, path=None):
     conf.merge(config)
     conf.store()
     return conf
-
-
-def blacklist_skill(skill):
-    skills_config = read_mycroft_config().get("skills", {})
-    blacklisted_skills = skills_config.get("blacklisted_skills", [])
-    if skill not in blacklisted_skills:
-        blacklisted_skills.append(skill)
-        conf = {
-            "skills": {
-                "blacklisted_skills": blacklisted_skills
-            }
-        }
-        update_mycroft_config(conf)
-        return True
-    return False
-
-
-def whitelist_skill(skill):
-    skills_config = read_mycroft_config().get("skills", {})
-    blacklisted_skills = skills_config.get("blacklisted_skills", [])
-    if skill in blacklisted_skills:
-        blacklisted_skills.pop(skill)
-        conf = {
-            "skills": {
-                "blacklisted_skills": blacklisted_skills
-            }
-        }
-        update_mycroft_config(conf)
-        return True
-    return False

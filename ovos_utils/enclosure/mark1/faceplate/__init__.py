@@ -1,4 +1,4 @@
-from ovos_utils.mark1 import Mark1EnclosureAPI
+from ovos_utils.enclosure.mark1 import Mark1EnclosureAPI
 from ovos_utils import create_loop
 from ovos_utils.log import LOG
 from ovos_utils.messagebus import get_mycroft_bus, Message
