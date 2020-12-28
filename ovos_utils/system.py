@@ -3,10 +3,11 @@ import sys
 import os
 import subprocess
 import re
+import shutil
 from enum import Enum
 import platform
-from ovos_utils.display import can_display, is_gui_installed
-from ovos_utils.configuration import read_mycroft_config
+import socket
+from os.path import expanduser
 
 
 class MycroftRootLocations(str, Enum):
@@ -16,6 +17,7 @@ class MycroftRootLocations(str, Enum):
     OLD_MARK1 = "/opt/venvs/mycroft-core/lib/python3.4/site-packages/"
     MARK1 = "/opt/venvs/mycroft-core/lib/python3.7/site-packages/"
     MARK2 = "/home/mycroft/mycroft-core"  # TODO mark2 here
+    HOME = expanduser("~/mycroft-core")
 
 
 def search_mycroft_core_location():
@@ -91,32 +93,44 @@ def is_process_running(process):
     return False
 
 
+def find_executable(executable):
+    return shutil.which(executable)
+
+
+def is_installed(executable):
+    return bool(find_executable(executable))
+
+
+def has_screen():
+    have_display = "DISPLAY" in os.environ
+    if not have_display:
+        # fallback check using matplotlib if available
+        try:
+            import matplotlib.pyplot as plt
+            try:
+                plt.figure()
+                have_display = True
+            except:
+                have_display = False
+        except ImportError:
+            pass
+    return have_display
+
+
 def get_platform_fingerprint():
-    # TODO hostname ?
-    conf = read_mycroft_config()
-    listener_conf = conf.get("listener", {})
-    skills_conf = conf.get("skills", {})
     return {
+        "hostname": socket.gethostname(),
         "platform": platform.platform(),
-        "enclosure": conf.get("enclosure", {}).get("platform"),
         "python_version": platform.python_version(),
         "system": platform.system(),
         "version": platform.version(),
         "arch": platform.machine(),
-        "data_dir": conf.get("data_dir"),
-        "msm_skills_dir": skills_conf.get("msm", {}).get("directory"),
         "release": platform.release(),
-        "node": platform.node(),
         "desktop_env": get_desktop_environment(),
-        "ipc_path": conf.get("ipc_path"),
-        "input_device_name": listener_conf.get("device_name"),
-        "input_device_index": listener_conf.get("device_index"),
-        "default_audio_backend": conf.get("Audio", {}).get("default-backend"),
-        "priority_skills": skills_conf.get("priority_skills"),
-        "backend_url": conf.get("server", {}).get("url"),
         "mycroft_core_location": search_mycroft_core_location(),
-        "can_display": can_display(),
-        "is_gui_installed": is_gui_installed(),
+        "can_display": has_screen(),
+        "is_gui_installed": is_installed("mycroft-gui-app"),
+        "is_vlc_installed": is_installed("vlc"),
         "pulseaudio_running": is_process_running("pulseaudio")
     }
 
