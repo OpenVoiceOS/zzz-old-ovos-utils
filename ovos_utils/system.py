@@ -6,6 +6,7 @@ import re
 from enum import Enum
 import platform
 from ovos_utils.display import can_display, is_gui_installed
+from ovos_utils.configuration import read_mycroft_config
 
 
 class MycroftRootLocations(str, Enum):
@@ -91,10 +92,7 @@ def is_process_running(process):
 
 
 def get_platform_fingerprint():
-    # TODO hostname
-
-    # TODO avoid circular import
-    from ovos_utils.configuration import read_mycroft_config
+    # TODO hostname ?
     conf = read_mycroft_config()
     listener_conf = conf.get("listener", {})
     skills_conf = conf.get("skills", {})
