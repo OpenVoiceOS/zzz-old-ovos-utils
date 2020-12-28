@@ -9,9 +9,43 @@ import json
 MYCROFT_SYSTEM_CONFIG = "/etc/mycroft/mycroft.conf"
 MYCROFT_USER_CONFIG = join(expanduser("~"), ".mycroft", "mycroft.conf")
 
-# TODO use json_database
+
+def get_config_fingerprint():
+    conf = read_mycroft_config()
+    listener_conf = conf.get("listener", {})
+    skills_conf = conf.get("skills", {})
+    return {
+        "enclosure": conf.get("enclosure", {}).get("platform"),
+        "data_dir": conf.get("data_dir"),
+        "msm_skills_dir": skills_conf.get("msm", {}).get("directory"),
+        "ipc_path": conf.get("ipc_path"),
+        "input_device_name": listener_conf.get("device_name"),
+        "input_device_index": listener_conf.get("device_index"),
+        "default_audio_backend": conf.get("Audio", {}).get("default-backend"),
+        "priority_skills": skills_conf.get("priority_skills"),
+        "backend_url": conf.get("server", {}).get("url")
+    }
 
 
+def read_mycroft_config():
+    conf = LocalConf(None)
+    conf.merge(MycroftDefaultConfig())
+    conf.merge(MycroftSystemConfig())
+    conf.merge(MycroftUserConfig())
+    return conf
+
+
+def update_mycroft_config(config, path=None):
+    if path is None:
+        conf = MycroftUserConfig()
+    else:
+        conf = LocalConf(path)
+    conf.merge(config)
+    conf.store()
+    return conf
+
+
+# TODO use json_database.JsonStorage
 class LocalConf(dict):
     """
         Config dict from file.
@@ -130,19 +164,4 @@ class MycroftSystemConfig(ReadOnlyConfig):
         super().__init__(MYCROFT_SYSTEM_CONFIG, allow_overwrite)
 
 
-def read_mycroft_config():
-    conf = LocalConf(None)
-    conf.merge(MycroftDefaultConfig())
-    conf.merge(MycroftSystemConfig())
-    conf.merge(MycroftUserConfig())
-    return conf
 
-
-def update_mycroft_config(config, path=None):
-    if path is None:
-        conf = MycroftUserConfig()
-    else:
-        conf = LocalConf(path)
-    conf.merge(config)
-    conf.store()
-    return conf
