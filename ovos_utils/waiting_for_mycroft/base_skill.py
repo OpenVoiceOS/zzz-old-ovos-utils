@@ -57,6 +57,7 @@ def get_non_properties(obj):
 
 
 class MycroftSkill(_MycroftSkill):
+    monkey_patched = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
