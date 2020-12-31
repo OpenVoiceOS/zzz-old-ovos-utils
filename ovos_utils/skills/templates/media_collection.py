@@ -23,7 +23,7 @@ try:
     from pyvod import Collection, Media
 except ImportError:
     LOG.error("py_VOD not installed!")
-    LOG.debug("py_VOD>=0.3.1")
+    LOG.debug("py_VOD>=0.4.0")
 
 
 class MediaCollectionSkill(CommonPlaySkill):
@@ -116,8 +116,14 @@ class MediaCollectionSkill(CommonPlaySkill):
         videos = [v for v in videos if not v.get("is_live")]
 
         # filter by duration
-        videos = [v for v in videos if int(v.get("duration", 0)) >=
-                  self.settings["min_duration"]]
+        if self.settings["min_duration"] > 0 or \
+                self.settings["max_duration"] > 0:
+            videos = [v for v in videos if
+                      v.get("duration")]  # might be missing
+
+        if self.settings["min_duration"] > 0:
+            videos = [v for v in videos if int(v.get("duration", 0)) >=
+                      self.settings["min_duration"]]
         if self.settings["max_duration"] > 0:
             videos = [v for v in videos if int(v.get("duration", 0)) <=
                       self.settings["max_duration"]]
