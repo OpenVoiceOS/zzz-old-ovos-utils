@@ -67,19 +67,23 @@ class SkillGUI(_SkillGUI):
 
     # new gui templates
     # NOT YET PRed to mycroft-core, taken from gez-mycroft wifi GUI test skill
-    def show_confirmation_status(self, text="", override_idle=False):
+    def show_confirmation_status(self, text="", override_idle=False,
+                                 override_animations=False):
         self.clear()
         self["icon"] = resolve_ovos_resource_file("ui/icons/check-circle.svg")
         self["label"] = text
         self["bgColor"] = "#40DBB0"
-        self.show_page("SYSTEM_status.qml", override_idle=override_idle)
+        self.show_page("SYSTEM_status.qml", override_idle=override_idle,
+                       override_animations=override_animations)
 
-    def show_error_status(self, text="", override_idle=False):
+    def show_error_status(self, text="", override_idle=False,
+                          override_animations=False):
         self.clear()
         self["icon"] = resolve_ovos_resource_file("ui/icons/times-circle.svg")
         self["label"] = text
         self["bgColor"] = "#FF0000"
-        self.show_page("SYSTEM_status.qml", override_idle=override_idle)
+        self.show_page("SYSTEM_status.qml", override_idle=override_idle,
+                       override_animations=override_animations)
 
     # video playback
     # https://github.com/MycroftAI/mycroft-core/pull/2683
