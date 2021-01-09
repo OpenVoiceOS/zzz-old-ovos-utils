@@ -119,10 +119,22 @@ class GUITracker:
     def on_active(self, namespace):
         pass
 
-    def on_new_page(self, page, namespace, index):
+    def on_new_page(self, namespace, page, index):
+        pass
+
+    def on_delete_page(self, namespace, index):
         pass
 
     def on_gui_value(self, namespace, key, value):
+        pass
+
+    def on_new_namespace(self, namespace):
+        pass
+
+    def on_move_namespace(self, namespace, from_index, to_index):
+        pass
+
+    def on_remove_namespace(self, namespace, index):
         pass
 
     ######################################################################
@@ -185,6 +197,7 @@ class GUITracker:
             pos (int):      Page position to remove
         """
         LOG.debug("Deleting {} from {}".format(pos, namespace))
+        self.on_delete_page(namespace, pos)
         # Remove the page from the local reprensentation as well.
         self._loaded[0].pages.pop(pos)
 
@@ -198,6 +211,10 @@ class GUITracker:
             namespace (str):  The skill namespace to create
             pages (str):      Pages to insert (name matches QML)
         """
+        LOG.debug("Inserting new namespace")
+        self.on_new_namespace(namespace)
+        # Make sure the local copy is updated
+        self._loaded.insert(0, self.Namespace(namespace, pages))
         if time.time() - self.idle_ts > 1:
             # we cant know if this page is idle or not, but when it is we
             # received a idle event within the same second
@@ -205,9 +222,6 @@ class GUITracker:
             self.on_active(namespace)
         else:
             self.on_idle(namespace)
-        LOG.debug("Inserting new namespace")
-        # Make sure the local copy is updated
-        self._loaded.insert(0, self.Namespace(namespace, pages))
 
     def __move_namespace(self, from_pos, to_pos):
         """ Move an existing namespace to a new position in the stack.
@@ -219,6 +233,8 @@ class GUITracker:
         LOG.debug("Activating existing namespace")
         # Move the local representation of the skill from current
         # position to position 0.
+        namespace = self._loaded[from_pos].name
+        self.on_move_namespace(namespace, from_pos, to_pos)
         self._loaded.insert(to_pos, self._loaded.pop(from_pos))
 
     def _show(self, namespace, page, index):
@@ -294,7 +310,7 @@ class GUITracker:
             page, namespace, index = self._get_page_data(message)
             # Pass the request to the GUI(s) to pull up a page template
             self._show(namespace, page, index)
-            self.on_new_page(page, namespace, index)
+            self.on_new_page(namespace, page, index)
         except Exception as e:
             LOG.exception(repr(e))
 
@@ -309,6 +325,7 @@ class GUITracker:
             return
         else:
             LOG.debug("Removing namespace {} at {}".format(namespace, index))
+            self.on_remove_namespace(namespace, index)
             # Remove namespace from loaded namespaces
             self._loaded.pop(index)
 
