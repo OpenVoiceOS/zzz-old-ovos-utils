@@ -449,18 +449,10 @@ class TTSValidator(metaclass=ABCMeta):
         pass
 
     def validate_instance(self):
-        clazz = self.get_tts_class()
-        if not isinstance(self.tts, clazz):
-            raise AttributeError('tts must be instance of ' + clazz.__name__)
+        pass
 
     def validate_filename(self):
-        filename = self.tts.filename
-        if not (filename and filename.endswith('.wav')):
-            raise AttributeError('file: %s must be in .wav format!' % filename)
-
-        dir_path = dirname(filename)
-        if not (exists(dir_path) and isdir(dir_path)):
-            raise AttributeError('filename: %s is not valid!' % filename)
+        pass
 
     @abstractmethod
     def validate_lang(self):
