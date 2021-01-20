@@ -37,26 +37,18 @@ class TestJsonHelpers(unittest.TestCase):
         )
 
         # NOT merging empty string / list / None
-        base = {"val": "old_value",
-                "val2": "old_value2",
-                "val3": "old_value3"}
         self.assertEqual(
-            merge_dict(base,
-                       {"val": None,
-                        "val2": "",
-                        "val3": []}, skip_empty=True),
-           base
+            merge_dict(deepcopy(self.base_dict),
+                       {"val": None,  "val2": "",  "val3": []},
+                       skip_empty=True), self.base_dict
         )
 
-        # merging False
+        # merging False and 0 and " "
         self.assertEqual(
-            merge_dict({"val": "old_value"}, {"val": False}, skip_empty=True),
-            {"val": False}
-        )
-        # merging 0
-        self.assertEqual(
-            merge_dict({"val": "old_value"}, {"val": 0}, skip_empty=True),
-            {"val": 0}
+            merge_dict(deepcopy(self.base_dict),
+                       {"one": False, "two": 0, "four": " "},
+                       skip_empty=True),
+            {"one": False, "two": 0, "three": 3, "four": " ", "five": 50}
         )
 
 

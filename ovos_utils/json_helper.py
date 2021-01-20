@@ -26,7 +26,7 @@ def merge_dict(base, delta, merge_lists=False, skip_empty=False,
         else:
             if new_only and k in base:
                 continue
-            if skip_empty and d in [None, "", [], " "]:
+            if skip_empty and d in [None, "", []]:
                 # dont replace if new entry is empty
                 # False and 0 should still be replaced
                 pass
