@@ -36,6 +36,30 @@ class TestJsonHelpers(unittest.TestCase):
                 "foo", "bar", "baz", 4, 5, 6, "foo"], "five": 50}
         )
 
+        # NOT merging empty string / list / None
+        base = {"val": "old_value",
+                "val2": "old_value2",
+                "val3": "old_value3"}
+        self.assertEqual(
+            merge_dict(base,
+                       {"val": None,
+                        "val2": "",
+                        "val3": []}, skip_empty=True),
+           base
+        )
+
+        # merging False
+        self.assertEqual(
+            merge_dict({"val": "old_value"}, {"val": False}, skip_empty=True),
+            {"val": False}
+        )
+        # merging 0
+        self.assertEqual(
+            merge_dict({"val": "old_value"}, {"val": 0}, skip_empty=True),
+            {"val": 0}
+        )
+
+
     # Difficult to test because order is not currently guaranteed.
 
     def test_merge_dict_no_dupes(self):
