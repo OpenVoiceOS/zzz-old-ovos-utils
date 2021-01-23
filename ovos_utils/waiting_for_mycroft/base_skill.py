@@ -197,11 +197,9 @@ class MycroftSkill(_MycroftSkill):
 
         """
         self._response = False
-        default_converse = self.converse  # backup original method
         self._real_wait_response(is_cancel, validator, on_fail, num_retries)
         while self._response is False:
             time.sleep(0.1)
-        self.converse = default_converse  # restore original method
         return self._response
 
     def __get_response(self):
@@ -219,7 +217,7 @@ class MycroftSkill(_MycroftSkill):
         self.make_active()
         converse.finished = False
         converse.response = None
-        self.converse = converse  # restored after returning from method
+        self.converse = converse
 
         # 10 for listener, 5 for SST, then timeout
         # NOTE a threading event is not used otherwise we can't raise the
@@ -233,6 +231,7 @@ class MycroftSkill(_MycroftSkill):
                     self.log.debug("get_response aborted")
                 converse.finished = True
                 converse.response = self._response  # external override
+        self.converse = self._original_converse
         return converse.response
 
     def _handle_killed_wait_response(self):
