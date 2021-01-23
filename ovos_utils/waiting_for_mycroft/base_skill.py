@@ -91,7 +91,8 @@ def killable_event(msg="mycroft.skills.abort_execution", exc=AbortEvent,
                 # this is the only killable daemon that core itself will
                 # create, users should also account for this condition with
                 # callbacks if using the decorator for other purposes
-                skill._response = None
+                skill._handle_killed_wait_response(skill)
+
                 try:
                     while t.is_alive():
                         t.raise_exc(exc)
@@ -127,6 +128,7 @@ class MycroftSkill(_MycroftSkill):
         self.public_api = {}  # pull/1822
         self.gui = SkillGUI(self)  # pull/2683
         self._threads = []
+        self._original_converse = self.converse
 
     # TODO PR for core - stops skill executing gracefully
     # this method can probably use a better refactor, we are only changing one
@@ -235,6 +237,7 @@ class MycroftSkill(_MycroftSkill):
 
     def _handle_killed_wait_response(self):
         self._response = None
+        self.converse = self._original_converse
 
     @killable_event("mycroft.skills.abort_question", exc=AbortQuestion,
                     callback=_handle_killed_wait_response, react_to_stop=True)
