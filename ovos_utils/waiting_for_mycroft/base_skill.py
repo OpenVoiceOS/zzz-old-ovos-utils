@@ -276,7 +276,7 @@ class MycroftSkill(_MycroftSkill):
                     return
 
             num_fails += 1
-            if 0 < num_retries < num_fails:
+            if 0 < num_retries < num_fails or self._response is not False:
                 self._response = None
                 return
 
