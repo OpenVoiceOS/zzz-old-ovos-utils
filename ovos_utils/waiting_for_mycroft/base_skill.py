@@ -91,7 +91,7 @@ def killable_event(msg="mycroft.skills.abort_execution", exc=AbortEvent,
                 # this is the only killable daemon that core itself will
                 # create, users should also account for this condition with
                 # callbacks if using the decorator for other purposes
-                skill._handle_killed_wait_response(skill)
+                skill._handle_killed_wait_response()
 
                 try:
                     while t.is_alive():
