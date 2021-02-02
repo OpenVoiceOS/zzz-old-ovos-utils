@@ -2,6 +2,7 @@ from mycroft_bus_client import MessageBusClient, Message
 from ovos_utils.log import LOG
 from ovos_utils.configuration import read_mycroft_config
 from ovos_utils import create_loop
+from ovos_utils.json_helper import merge_dict
 import time
 import json
 
@@ -204,20 +205,23 @@ def send_message(message, data=None, context=None, bus=None):
 
 
 def send_binary_data_message(binary_data, msg_type="mycroft.binary.data",
-                             context=None, bus=None):
+                             msg_data=None, msg_context=None, bus=None):
+    msg_data = msg_data or {}
     msg = {
         "type": msg_type,
-        "data": {"binary": binary_data.hex()},
-        "context": context or None
+        "data": merge_dict(msg_data, {"binary": binary_data.hex()}),
+        "context": msg_context or None
     }
     send_message(msg, bus=bus)
 
 
 def send_binary_file_message(filepath, msg_type="mycroft.binary.file",
-                             context=None, bus=None):
+                             msg_context=None, bus=None):
     with open(filepath, 'rb') as f:
         binary_data = f.read()
-    send_binary_data_message(binary_data, msg_type, context, bus)
+    msg_data = {"path": filepath}
+    send_binary_data_message(binary_data, msg_type=msg_type, msg_data=msg_data,
+                             msg_context=msg_context, bus=bus)
 
 
 def decode_binary_message(message):
