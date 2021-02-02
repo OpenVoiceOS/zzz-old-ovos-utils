@@ -203,6 +203,29 @@ def send_message(message, data=None, context=None, bus=None):
         bus.close()
 
 
+def send_binary_data_message(binary_data, msg_type="mycroft.binary.data",
+                             context=None, bus=None):
+    msg = {
+        "type": msg_type,
+        "data": {"binary": binary_data.hex()},
+        "context": context or None
+    }
+    send_message(msg, bus=bus)
+
+
+def send_binary_file_message(filepath, msg_type="mycroft.binary.file",
+                             context=None, bus=None):
+    with open(filepath, 'rb') as f:
+        binary_data = f.read()
+    msg = {
+        "type": msg_type,
+        "data": {"binary": binary_data.hex(),
+                 "original_path": filepath},
+        "context": context or None
+    }
+    send_message(msg, bus=bus)
+
+
 class BusService:
     """
     Provide some service over the messagebus for other components
