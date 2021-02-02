@@ -226,6 +226,23 @@ def send_binary_file_message(filepath, msg_type="mycroft.binary.file",
     send_message(msg, bus=bus)
 
 
+def decode_binary_message(message):
+    if isinstance(message, str):
+        try:  # json string
+            message = json.loads(message)
+            binary_data = message.get("binary") or message["data"]["binary"]
+        except:  # hex string
+            binary_data = message
+    elif isinstance(message, dict):
+        # data field or serialized message
+        binary_data = message.get("binary") or message["data"]["binary"]
+    else:
+        # message object
+        binary_data = message.data["binary"]
+    # decode hex string
+    return bytearray.fromhex(binary_data)
+
+
 class BusService:
     """
     Provide some service over the messagebus for other components
