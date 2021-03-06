@@ -15,6 +15,15 @@ class CPSPlayback(IntEnum):
     AUDIO = 2
 
 
+class CPSMatchLevel(IntEnum):
+    EXACT = 1
+    MULTI_KEY = 2
+    TITLE = 3
+    ARTIST = 4
+    CATEGORY = 5
+    GENERIC = 6
+
+
 class CPSMatchConfidence(IntEnum):
     EXACT = 95
     VERY_HIGH = 90
@@ -43,8 +52,7 @@ class CPSTrackStatus(IntEnum):
 
 
 class CPSMatchType(IntEnum):
-    GENERIC = 0
-    AUDIO = 1
+    GENERIC = 1
     MUSIC = 2
     VIDEO = 3
     AUDIOBOOK = 4
@@ -215,12 +223,6 @@ class BetterCommonPlayInterface:
         self.bus.on("better_cps.status.update", self.handle_cps_status_change)
         self.register_gui_handlers()
 
-    def shutdown(self):
-        self.bus.remove("better_cps.query.response", self.handle_cps_response)
-        self.bus.remove("better_cps.status.update",
-                        self.handle_cps_status_change)
-        self.gui.shutdown()
-
     def handle_cps_response(self, message):
         search_phrase = message.data["phrase"]
         timeout = message.data.get("timeout")
@@ -276,8 +278,7 @@ class BetterCommonPlayInterface:
         # life cycle but instead delegate to the skill
         if self.old_cps:
             old_style = self.old_cps.get_results(phrase)
-            self.query_replies[phrase] += self._convert_to_new_style(old_style,
-                                                                     media_type)
+            self.query_replies[phrase] += self._convert_to_new_style(old_style, media_type)
 
         if self.query_replies.get(phrase):
             return [s for s in self.query_replies[phrase] if s.get("results")]
@@ -287,14 +288,6 @@ class BetterCommonPlayInterface:
             LOG.debug("BetterCPS falling back to CPSMatchType.GENERIC")
             return self.search(phrase, media_type=CPSMatchType.GENERIC)
         return []
-
-    def process_search(self, selected, results):
-        # TODO playlist
-        self._update_current_media(selected)
-        self._update_disambiguation(results)
-        self._set_search_results(results, best=selected)
-        self._set_now_playing(selected)
-        self.play()
 
     @staticmethod
     def _convert_to_new_style(results, media_type=CPSMatchType.GENERIC):
@@ -401,13 +394,16 @@ class BetterCommonPlayInterface:
         self.bus.emit(Message('better_cps.status.update', status))
 
     # playback control
-    def play(self):
-        data = self.playback_data.get("playing") or {}
+    def play(self, data):
         uri = data.get("stream") or data.get("uri") or data.get("url")
         skill_id = self.active_skill = data["skill_id"]
         if data["playback"] == CPSPlayback.AUDIO:
             data["status"] = CPSTrackStatus.PLAYING_AUDIOSERVICE
-            real_url = self.get_stream(uri)
+            real_url = uri
+            if is_youtube(uri):
+                real_url = get_youtube_audio_stream(uri)
+                if not real_url:
+                    real_url = get_youtube_video_stream(uri)
             self.audio_service.play(real_url)
 
         elif data["playback"] == CPSPlayback.SKILL:
@@ -424,19 +420,8 @@ class BetterCommonPlayInterface:
         else:
             raise ValueError("invalid playback request")
         self.update_status(data)
-        self._set_now_playing(data)
-        self.display_ui()
+        self.display_ui(media=data)
         self.update_player_status("Playing")
-
-    @staticmethod
-    def get_stream(uri, video=False):
-        real_url = None
-        if is_youtube(uri):
-            if not video:
-                real_url = get_youtube_audio_stream(uri)
-            if video or not real_url:
-                real_url = get_youtube_video_stream(uri)
-        return real_url or uri
 
     def play_next(self):
         # TODO playlist handling
@@ -491,67 +476,28 @@ class BetterCommonPlayInterface:
 
     # ######### GUI integration ###############
     def register_gui_handlers(self):
-        self.gui.register_handler('better-cps.gui.play',
-                                  self.handle_click_resume)
-        self.gui.register_handler('better-cps.gui.pause',
-                                  self.handle_click_pause)
-        self.gui.register_handler('better-cps.gui.next',
-                                  self.handle_click_next)
-        self.gui.register_handler('better-cps.gui.previous',
-                                  self.handle_click_previous)
-        self.gui.register_handler('better-cps.gui.seek',
-                                  self.handle_click_seek)
+        # All Handlers For Player QML
+        self.gui.register_handler('better-cps.gui.playAction', self.handle_click_resume)
+        self.gui.register_handler('better-cps.gui.pauseAction', self.handle_click_pause)
+        self.gui.register_handler('better-cps.gui.nextAction', self.handle_click_next)
+        self.gui.register_handler('better-cps.gui.previousAction', self.handle_click_previous)
+        self.gui.register_handler('better-cps.gui.playerSeekAction', self.handle_click_seek)
 
-        self.gui.register_handler('better-cps.gui.playlist.play',
-                                  self.handle_play_from_playlist)
-        self.gui.register_handler('better-cps.gui.search.play',
+        # All Handlers For Playlist QML
+        self.gui.register_handler('better-cps.gui.playlistPlay', self.handle_play_from_playlist)
+        self.gui.register_handler('better-cps.gui.searchPlay',
                                   self.handle_play_from_search)
 
-    def update_player_status(self, status, page=0):
-        self.gui["media"]["status"] = status
-        self.display_ui(page=page)
-
-    def display_ui(self, search=None, media=None, playlist=None, page=0):
-        search_qml = "Disambiguation.qml"
-        player_qml = "AudioPlayer.qml"
-        video_player_qml = "VideoPlayer.qml"
-        playlist_qml = "Playlist.qml"
-
-        media = media or self.gui.get("media") or {}
-        media["status"] = media.get("status", "Paused")
-        media["position"] = media.get("position", 0)
-        media["length"] = media.get("length") or -1
-        search = search or self.gui.get("searchModel", {}).get("data") or {}
-        playlist = playlist or self.gui.get("playlistModel", {}).get("data") or {}
-
-        # remove previous pages
-        pages = [player_qml, search_qml, playlist_qml, video_player_qml]
-        self.gui.remove_pages(pages)
-
-        # display "now playing" video page
-        if media.get("playback", -1) == CPSPlayback.GUI:
-            uri = media.get("stream") or \
-                  media.get("url") or \
-                  media.get("uri")
-            self.gui["stream"] = self.get_stream(uri, video=True)
-            self.gui["title"] = media.get("title", "")
-            self.gui["playStatus"] = "play"
-            pages = [video_player_qml, search_qml, playlist_qml]
-
-        # display "now playing" music page
-        else:
-            pages = [player_qml, search_qml, playlist_qml]
-
-        self.gui["searchModel"] = {"data": search}
-        self.gui["playlistModel"] = {"data": playlist}
-        self.gui.show_pages(pages, page, override_idle=True)
-
-    def _set_search_results(self, results, best=None):
+    def update_search_results(self, results, best=None):
         best = best or results[0]
         for idx, data in enumerate(results):
+            url = data.get("stream") or \
+                  data.get("url") or \
+                  data.get("uri")
             results[idx]["length"] = data.get("length") or \
-                                     data.get("track_length") or \
-                                     data.get("duration")
+                                       data.get("track_length") or \
+                                       data.get("duration") #or \
+                                       #get_duration_from_url(url)
         self._search_results = results
         # send all results for disambiguation
         # this can be used in GUI or any other use facing interface to
@@ -566,8 +512,52 @@ class BetterCommonPlayInterface:
         playlist = self._res2playlist([best])  # TODO cps playlist
         self.display_ui(media=best, playlist=playlist, search=results)
 
-    @staticmethod
-    def _res2playlist(res):
+    def display_ui(self, search=None, media=None, playlist=None, page=0):
+        search_qml = "disambiguation.qml"
+        player_qml = "player_simple.qml"
+        video_qml = "videoplayer.qml"
+        playlist_qml = "playlist.qml"
+
+        media = media or self.gui.get("media") or {}
+        media["status"] = media.get("status", "Paused")
+        media["position"] = media.get("position", 0)
+        search = search or self.gui.get("searchModel", {}).get("data") \
+                 or {}
+        playlist = playlist or self.gui.get("playlistModel", {}).get("data") \
+                   or {}
+
+        self.update_disambiguation(search)
+        self.update_media(media)
+        self.update_playlist(playlist)
+
+        if media.get("playback", -1) == CPSPlayback.GUI:
+
+            url = media.get("stream") or \
+                  media.get("url") or \
+                  media.get("uri")
+            #if is_youtube(url):
+            #    url = get_youtube_video_stream(url)
+            #self.gui.remove_page(player_qml)
+            #self.gui.play_video(url, media.get("title"))
+            #self.gui["playStatus"] = "play"
+            """
+            self.gui["video"] = url
+            self.gui["title"] = media.get("title", "")
+            self.gui["playerRepeat"] = False
+            self.gui.show_pages([video_qml, search_qml, playlist_qml], page,
+                                override_idle=True)
+            """
+            self.gui.show_pages([player_qml, search_qml, playlist_qml], page,
+                                override_idle=True)
+        else:
+            self.gui.show_pages([player_qml, search_qml, playlist_qml], page,
+                                override_idle=True)
+
+    def update_player_status(self, status, page=0):
+        self.gui["media"]["status"] = status
+        self.display_ui(page=page)
+
+    def _res2playlist(self, res):
         playlist_data = []
         for r in res:
             playlist_data.append({
@@ -579,20 +569,26 @@ class BetterCommonPlayInterface:
             })
         return playlist_data
 
-    def _set_now_playing(self, data):
+    def update_disambiguation(self, playlist_data):
+        self.gui["searchModel"] = {"data": playlist_data}
+
+    def update_playlist(self, playlist_data):
+        self.gui["playlistModel"] = {"data": playlist_data}
+
+    def update_media(self, data):
         if data.get("bg_image", "").startswith("/"):
             data["bg_image"] = "file:/" + data["bg_image"]
         data["skill"] = data.get("skill_id", "better-cps")
         data["position"] = data.get("position", 0)
 
+        url = data.get("stream") or data.get("url") or data.get("uri")
         data["length"] = data.get("length") or data.get("track_length") or \
-                         data.get("duration")  # or get_duration_from_url(url)
+                           data.get("duration") #or get_duration_from_url(url)
 
         self.gui["media"] = data
         self.gui["bg_image"] = data.get("bg_image",
                                         "https://source.unsplash.com/weekly?music")
 
-    # gui events
     def handle_click_pause(self, message):
         self.audio_service.pause()
         self.update_player_status("Paused")
@@ -616,6 +612,7 @@ class BetterCommonPlayInterface:
             self.display_ui()
 
     def handle_play_from_playlist(self, message):
+        # Do whatever processing here to play song
         playlist_data = message.data["playlistData"]
         self.__play(playlist_data)
 
@@ -627,105 +624,12 @@ class BetterCommonPlayInterface:
 
     def __play(self, media):
         playlist = self._res2playlist([media])  # TODO cps playlist
-        self.gui["playlistModel"] = {"data": playlist}
-        self._update_current_media(media)
-        self.play()
+        self.update_playlist(playlist)
+        self.update_media(media)
+        self.play(media)
 
 
-class CPSTracker:
-    def __init__(self, bus=None, gui=None):
-        self.bus = bus or get_mycroft_bus()
-        self.bus.on("better_cps.query.response", self.handle_cps_response)
-        self.bus.on("better_cps.status.update", self.handle_cps_status_change)
 
-        self.gui = gui or GUIInterface("better-cps", bus=self.bus)
-        self.register_gui_handlers()
-
-    def register_gui_handlers(self):
-        self.gui.register_handler('better-cps.gui.play',
-                                  self.handle_click_resume)
-        self.gui.register_handler('better-cps.gui.pause',
-                                  self.handle_click_pause)
-        self.gui.register_handler('better-cps.gui.next',
-                                  self.handle_click_next)
-        self.gui.register_handler('better-cps.gui.previous',
-                                  self.handle_click_previous)
-        self.gui.register_handler('better-cps.gui.seek',
-                                  self.handle_click_seek)
-
-        self.gui.register_handler('better-cps.gui.playlist.play',
-                                  self.handle_play_from_playlist)
-        self.gui.register_handler('better-cps.gui.search.play',
-                                  self.handle_play_from_search)
-
-    def shutdown(self):
-        self.bus.remove("better_cps.query.response", self.handle_cps_response)
-        self.bus.remove("better_cps.status.update",
-                        self.handle_cps_status_change)
-        self.gui.shutdown()
-
-    def handle_cps_response(self, message):
-        search_phrase = message.data["phrase"]
-        skill = message.data['skill_id']
-        timeout = message.data.get("timeout")
-
-        if message.data.get("searching"):
-            if timeout:
-                self.on_extend_timeout(search_phrase, skill, timeout)
-        else:
-            self.on_skill_results(search_phrase, skill, message.data)
-
-    def handle_cps_status_change(self, message):
-        status = message.data["status"]
-        print("New status:", status)
-
-    def handle_click_resume(self, message):
-        print(message.data)
-
-    def handle_click_pause(self, message):
-        print(message.data)
-
-    def handle_click_next(self, message):
-        print(message.data)
-
-    def handle_click_previous(self, message):
-        print(message.data)
-
-    def handle_click_seek(self, message):
-        print(message.data)
-
-    def handle_play_from_playlist(self, message):
-        print(message.data)
-
-    def handle_play_from_search(self, message):
-        print(message.data)
-
-    # users can subclass these
-    def on_query(self, message):
-        pass
-
-    def on_skill_results(self, phrase, skill_id, results):
-        pass
-
-    def on_query_response(self, message):
-        pass
-
-    def on_status_change(self, message):
-        pass
-
-    def on_extend_timeout(self, phrase, timeout, skill_id):
-        print("extending timeout:", timeout, "\n",
-              "phrase:", phrase, "\n",
-              "skill:", skill_id, "\n")
-
-    def on_skill_play(self, message):
-        pass
-
-    def on_audio_play(self, message):
-        pass
-
-    def on_gui_play(self, message):
-        pass
 
 
 if __name__ == "__main__":
@@ -734,8 +638,8 @@ if __name__ == "__main__":
     cps = BetterCommonPlayInterface(max_timeout=10, min_timeout=2)
 
     # test lovecraft skills
-    pprint(cps.search("dagon"))
-
+    #pprint(cps.search("dagon"))
+    pprint(cps.search("horror story"))
     exit()
     pprint(cps.search("the thing in the doorstep"))
 

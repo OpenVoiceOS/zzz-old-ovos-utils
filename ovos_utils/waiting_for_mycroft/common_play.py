@@ -13,9 +13,8 @@
 # limitations under the License.
 from inspect import signature
 from abc import abstractmethod
-from enum import IntEnum
 from ovos_utils.waiting_for_mycroft.base_skill import MycroftSkill
-from ovos_utils.playback import CPSMatchType, CPSTrackStatus
+from ovos_utils.playback import CPSMatchType, CPSMatchLevel, CPSTrackStatus
 try:
     from mycroft.skills.common_play_skill import CommonPlaySkill as _CommonPlaySkill
 except ImportError:
@@ -30,16 +29,8 @@ except ImportError:
         LOG.error("Could not find mycroft root path")
         raise ImportError
 
-
 # implementation of
 # https://github.com/MycroftAI/mycroft-core/pull/2660
-class CPSMatchLevel(IntEnum):
-    EXACT = 1
-    MULTI_KEY = 2
-    TITLE = 3
-    ARTIST = 4
-    CATEGORY = 5
-    GENERIC = 6
 
 
 class CommonPlaySkill(MycroftSkill, _CommonPlaySkill):
