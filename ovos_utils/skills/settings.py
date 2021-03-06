@@ -1,3 +1,6 @@
+from json_database import JsonStorageXDG
+
+
 def settings2meta(settings, section_name="Skill Settings"):
     """ generates basic settingsmeta """
     fields = []
@@ -37,3 +40,12 @@ def settings2meta(settings, section_name="Skill Settings"):
             ]
         }
     }
+
+
+class PrivateSettings(JsonStorageXDG):
+    def __init__(self, skill_id):
+        super(PrivateSettings, self).__init__(skill_id)
+
+    @property
+    def settingsmeta(self):
+        return settings2meta(self)
