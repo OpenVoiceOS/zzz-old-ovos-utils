@@ -1,12 +1,13 @@
-from ovos_utils.waiting_for_mycroft.common_play import CommonPlaySkill, \
-    CPSMatchLevel, CPSTrackStatus, CPSMatchType
 from os.path import join, dirname, basename
 import random
 from ovos_utils import get_mycroft_root, datestr2ts, resolve_ovos_resource_file
 from ovos_utils.log import LOG
 from ovos_utils.parse import fuzzy_match
+from ovos_utils.json_helper import merge_dict
 from json_database import JsonStorageXDG
-
+import random
+from ovos_utils.skills.templates.common_play import BetterCommonPlaySkill
+from ovos_utils.playback import CPSMatchType, CPSPlayback, CPSMatchConfidence
 try:
     from mycroft.skills.core import intent_file_handler
 except ImportError:
@@ -27,7 +28,7 @@ except ImportError:
     pyvod = None
 
 
-class VideoCollectionSkill(CommonPlaySkill):
+class VideoCollectionSkill(BetterCommonPlaySkill):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -43,11 +44,32 @@ class VideoCollectionSkill(CommonPlaySkill):
             self.settings["filter_live"] = False
         if "filter_date" not in self.settings:
             self.settings["filter_date"] = False
+        if "min_score" not in self.settings:
+            self.settings["min_score"] = 40
+        if "match_description" not in self.settings:
+            self.settings["match_description"] = False
+        if "match_tags" not in self.settings:
+            self.settings["match_tags"] = True
+        if "match_title" not in self.settings:
+            self.settings["match_title"] = True
+        if "filter_trailers" not in self.settings:
+            self.settings["filter_trailers"] = True
+        if "filter_behind_scenes" not in self.settings:
+            self.settings["filter_behind_scenes"] = True
+        if "search_depth" not in self.settings:
+            # after matching and ordering by title
+            # will match/search metadata for N videos
+            # some collection can be huge and matching everything will cause
+            # a timeout, collections with less than N videos wont have any
+            # problem
+            self.settings["search_depth"] = 500
 
         if pyvod is None:
             LOG.error("py_VOD not installed!")
             LOG.info("pip install py_VOD>=0.4.0")
             raise ImportError
+        self.playback_type = CPSPlayback.GUI
+        self.media_type = CPSMatchType.VIDEO
         self.default_bg = "https://github.com/OpenVoiceOS/ovos_assets/raw/master/Logo/ovos-logo-512.png"
         self.default_image = resolve_ovos_resource_file("ui/images/moviesandfilms.png")
         db_path = join(dirname(__file__), "res", self.name + ".jsondb")
@@ -55,7 +77,6 @@ class VideoCollectionSkill(CommonPlaySkill):
         self.media_collection = pyvod.Collection(self.name,
                                            logo=self.default_image,
                                            db_path=db_path)
-
 
     def initialize(self):
         self.initialize_media_commons()
@@ -91,6 +112,9 @@ class VideoCollectionSkill(CommonPlaySkill):
                 else:
                     videos[idx]["url"] = videos[idx].get("stream") or \
                                          videos[idx].get("url")
+                # convert duration to milliseconds
+                if v.get("duration"):
+                    videos[idx]["length"] = v["duration"] * 1000
             # return sorted
             return self.sort_videos(videos)
         except Exception as e:
@@ -137,6 +161,20 @@ class VideoCollectionSkill(CommonPlaySkill):
         # TODO filter behind the scenes, clips etc based on
         #  title/tags/description/keywords required or forbidden
 
+        # filter trailers
+        if self.settings["filter_trailers"] and \
+                CPSMatchType.TRAILER not in self.supported_media:
+            # TODO bundle .voc for "trailer"
+            videos = [v for v in videos
+                      if not self.voc_match(v["title"], "trailer")]
+
+        # filter behind the scenes
+        if self.settings["filter_behind_scenes"] and \
+                CPSMatchType.BEHIND_THE_SCENES not in self.supported_media:
+            # TODO bundle .voc for "behind_scenes"
+            videos = [v for v in videos
+                      if not self.voc_match(v["title"], "behind_scenes")]
+
         if self.settings["shuffle_menu"]:
             random.shuffle(videos)
 
@@ -159,7 +197,7 @@ class VideoCollectionSkill(CommonPlaySkill):
     def play_video_event(self, message):
         video_data = message.data["modelData"]
         if video_data["skill_id"] == self.skill_id:
-            self.play_video(video_data)
+            pass  # TODO
 
     # watch history database
     def add_to_history(self, video_data):
@@ -181,64 +219,79 @@ class VideoCollectionSkill(CommonPlaySkill):
 
     # matching
     def match_media_type(self, phrase, media_type):
-        match = None
-        score = 0
-
+        base_score = 0
         if media_type == CPSMatchType.VIDEO:
-            score += 0.05
-            match = CPSMatchLevel.GENERIC
-
-        return match, score
+            base_score += 5
+        if media_type != self.media_type:
+            base_score -= 20
+        return base_score
 
     def augment_tags(self, phrase, media_type, tags=None):
         return tags or []
 
-    def match_tags(self, video, phrase, match, media_type):
+    def match_tags(self, video, phrase, media_type):
         score = 0
         # score tags
-        leftover_text = phrase
         tags = list(set(video.get("tags") or []))
         tags = self.augment_tags(phrase, media_type, tags)
         if tags:
             # tag match bonus
             for tag in tags:
                 tag = tag.lower().strip()
+                if tag in phrase.split(" "):
+                    score += 10
                 if tag in phrase:
-                    match = CPSMatchLevel.CATEGORY
-                    score += 0.05
-                    leftover_text = leftover_text.replace(tag, "")
-        return match, score, leftover_text
+                    score += 3
+        return score
 
-    def match_description(self, video, phrase, match):
+    def match_description(self, video, phrase,  media_type):
         # score description
         score = 0
         leftover_text = phrase
         words = video.get("description", "").split(" ")
         for word in words:
             if len(word) > 4 and word in self.normalize_title(leftover_text):
-                score += 0.05
+                score += 1
                 leftover_text = leftover_text.replace(word, "")
-        return match, score, leftover_text
+        return score
 
-    def match_title(self, videos, phrase, match):
+    def match_title(self, video, phrase, media_type):
         # match video name
         clean_phrase = self.normalize_title(phrase)
-        leftover_text = phrase
-        best_score = 0
-        best_video = random.choice(videos)
-        for video in videos:
-            title = video["title"]
-            score = fuzzy_match(clean_phrase, self.normalize_title(title))
-            if phrase.lower() in title.lower() or \
-                    clean_phrase in self.normalize_title(title):
-                score += 0.3
-            if score >= best_score:
-                # TODO handle ties
-                match = CPSMatchLevel.TITLE
-                best_video = video
-                best_score = score
-                leftover_text = phrase.replace(title, "")
-        return match, best_score, best_video, leftover_text
+        title = video["title"]
+        score = fuzzy_match(clean_phrase, self.normalize_title(title)) * 100
+        if phrase.lower() in title.lower() or \
+                clean_phrase in self.normalize_title(title):
+            score += 10
+        if phrase.lower() in title.lower().split(" ") or \
+                clean_phrase in self.normalize_title(title).split(" "):
+            score += 30
+
+        if media_type == CPSMatchType.TRAILER:
+            if self.voc_match(title, "trailer"):
+                score += 20
+            else:
+                score -= 10
+        elif self.settings["filter_trailers"] and \
+                self.voc_match(title, "trailer") or \
+                "trailer" in title.lower():
+            # trailer in title, but not in media_type, let's skip it
+            # TODO bundle trailer.voc in ovos_utils
+            score = 0
+
+        if media_type == CPSMatchType.BEHIND_THE_SCENES:
+            if self.voc_match(title, "behind_scenes"):
+                score += 20
+            else:
+                score -= 10
+        elif self.settings["filter_behind_scenes"] and \
+                self.voc_match(title, "behind_scenes") or \
+                "behind the scenes" in title.lower():
+            # trailer in title, but not in media_type, let's skip it
+            # TODO bundle behind_scenes.voc in ovos_utils
+            score = 0
+
+        return score
 
     def normalize_title(self, title):
         title = title.lower().strip()
@@ -250,107 +303,40 @@ class VideoCollectionSkill(CommonPlaySkill):
         # spaces
 
     # common play
-    def calc_final_score(self, phrase, base_score, match_level):
-        return base_score, match_level
+    def CPS_search(self, phrase, media_type):
+        base_score = self.match_media_type(phrase, media_type)
+        # penalty for generic searches, they tend to overmatch
+        if media_type == CPSMatchType.GENERIC:
+            base_score -= 20
+        # match titles and sort
+        # then match all the metadata up to self.settings["search_depth"]
+        videos = sorted(self.videos,
+                        key=lambda k: fuzzy_match(k["title"], phrase),
+                        reverse=True)
+        cps_results = []
+        for idx, video in enumerate(videos[:self.settings["search_depth"]]):
+            score = base_score + fuzzy_match(video["title"], phrase) * 30
+            if self.settings["match_tags"]:
+                score += self.match_tags(video, phrase, media_type)
+            if self.settings["match_title"]:
+                score += self.match_title(video, phrase, media_type)
+            if self.settings["match_description"]:
+                score += self.match_description(video, phrase, media_type)
+            if score < self.settings["min_score"]:
+                continue
+            cps_results.append(merge_dict(video, {
+                "match_confidence": min(100, score),
+                "media_type": self.media_type,
+                "playback": self.playback_type,
+                "skill_icon": self.skill_icon,
+                "skill_logo": self.skill_logo,
+                "bg_image": self.default_bg,
+                "image": video.get("logo") or self.default_image,
+                "author": self.name
+            }))
 
-    def base_CPS_match(self, phrase, media_type):
-        best_score = 0
-        # see if media type is in query, base_score will depend if "video" is in query
-        match, base_score = self.match_media_type(phrase, media_type)
-        videos = list(self.videos)
-        best_video = random.choice(self.videos)
-        # match video data
-        scores = []
-        for video in videos:
-            match, score, _ = self.match_tags(video, phrase, match, media_type)
-            # match, score, leftover_text = self.match_description(video, leftover_text, match)
-            scores.append((video, score))
-            if score > best_score:
-                best_video = video
-                best_score = score
-
-        self.log.debug("Best Tags Match: {s}, {t}".format(
-            s=best_score, t=best_video["title"]))
-
-        # match video name
-        match, title_score, best_title, leftover_text = self.match_title(
-            videos, phrase, match)
-        self.log.debug("Best Title Match: {s}, {t}".format(
-            s=title_score, t=best_title["title"]))
-
-        # title more important than tags
-        if title_score + 0.15 > best_score:
-            best_video = best_title
-            best_score = title_score
-
-        # sort matches
-        scores = sorted(scores, key=lambda k: k[1], reverse=True)
-        scores.insert(0, (best_title, title_score))
-        scores.remove((best_video, best_score))
-        scores.insert(0, (best_video, best_score))
-
-        # choose from top N
-        if best_score < 0.5:
-            n = 50
-        elif best_score < 0.6:
-            n = 10
-        elif best_score < 0.8:
-            n = 3
-        else:
-            n = 1
-
-        candidates = scores[:n]
-        self.log.info("Choosing randomly from top {n} matches".format(
-            n=len(candidates)))
-        best_video = random.choice(candidates)[0]
-
-        # calc final confidence
-        score = base_score + best_score
-        score = self.calc_final_score(phrase, score, match)
-        if isinstance(score, float):
-            if score >= 0.9:
-                match = CPSMatchLevel.EXACT
-            elif score >= 0.7:
-                match = CPSMatchLevel.MULTI_KEY
-            elif score >= 0.5:
-                match = CPSMatchLevel.TITLE
-        else:
-            score, match = score
-
-        self.log.info("Best video: " + best_video["title"])
-
-        if match is not None:
-            return (leftover_text, match, best_video)
-        return None
-
-    def CPS_match_query_phrase(self, phrase, media_type):
-        match = self.base_CPS_match(phrase, media_type)
-        if match is None:
-            return None
-        # match == (leftover_text, CPSMatchLevel, best_video_data)
-        return match
-
-    def CPS_start(self, phrase, data):
-        self.play_video(data)
-
-    def play_video(self, data):
-        self.add_to_history(data)
-        bg = data.get("background") or self.default_bg
-        image = data.get("image") or self.default_image
-
-        if len(data.get("streams", [])):
-            url = data["streams"][0]
-        else:
-            url = data.get("stream") or data.get("url")
-
-        title = data.get("name") or self.name
-        self.CPS_send_status(uri=url,
-                             image=image,
-                             background_image=bg,
-                             playlist_position=0,
-                             status=CPSTrackStatus.PLAYING_GUI)
-        self.gui.play_video(pyvod.utils.get_video_stream(url), title)
-
-    def stop(self):
-        self.gui.release()
+        cps_results = sorted(cps_results,
+                             key=lambda k: k["match_confidence"],
+                             reverse=True)
+        return cps_results
 

@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from inspect import signature
-from enum import IntEnum
 from abc import abstractmethod
 from ovos_utils.waiting_for_mycroft.base_skill import MycroftSkill
-
+from ovos_utils.playback import CPSMatchType, CPSMatchLevel, CPSTrackStatus
 try:
     from mycroft.skills.common_play_skill import CommonPlaySkill as _CommonPlaySkill
 except ImportError:
@@ -32,47 +31,6 @@ except ImportError:
 
 # implementation of
 # https://github.com/MycroftAI/mycroft-core/pull/2660
-
-
-class CPSMatchLevel(IntEnum):
-    EXACT = 1
-    MULTI_KEY = 2
-    TITLE = 3
-    ARTIST = 4
-    CATEGORY = 5
-    GENERIC = 6
-
-
-class CPSTrackStatus(IntEnum):
-    DISAMBIGUATION = 1  # not queued for playback, show in gui
-    PLAYING = 20  # Skill is handling playback internally
-    PLAYING_AUDIOSERVICE = 21  # Skill forwarded playback to audio service
-    PLAYING_GUI = 22  # Skill forwarded playback to gui
-    PLAYING_ENCLOSURE = 23  # Skill forwarded playback to enclosure
-    QUEUED = 30  # Waiting playback to be handled inside skill
-    QUEUED_AUDIOSERVICE = 31  # Waiting playback in audio service
-    QUEUED_GUI = 32  # Waiting playback in gui
-    QUEUED_ENCLOSURE = 33  # Waiting for playback in enclosure
-    PAUSED = 40  # media paused but ready to resume
-    STALLED = 60  # playback has stalled, reason may be unknown
-    BUFFERING = 61  # media is buffering from an external source
-    END_OF_MEDIA = 90  # playback finished, is the default state when CPS loads
-
-
-class CPSMatchType(IntEnum):
-    GENERIC = 1
-    MUSIC = 2
-    VIDEO = 3
-    AUDIOBOOK = 4
-    GAME = 5
-    PODCAST = 6
-    RADIO = 7
-    NEWS = 8
-    TV = 9
-    MOVIE = 10
-    TRAILER = 11
-    ADULT = 12
-    VISUAL_STORY = 13
 
 
 class CommonPlaySkill(MycroftSkill, _CommonPlaySkill):
