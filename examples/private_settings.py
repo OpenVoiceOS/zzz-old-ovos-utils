@@ -12,7 +12,7 @@ with PrivateSettings("testskill.jarbasai") as settings:
                                              'name': 'key',
                                              'type': 'text',
                                              'value': 'value'}],
-                                 'name': 'Skill Settings'}]}}
+                                 'name': 'testskill.jarbasai'}]}}
     """
 
     # auto saved when leaving "with" context

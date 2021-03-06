@@ -48,4 +48,4 @@ class PrivateSettings(JsonStorageXDG):
 
     @property
     def settingsmeta(self):
-        return settings2meta(self)
+        return settings2meta(self, self.name)
