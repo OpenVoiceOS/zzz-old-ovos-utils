@@ -6,7 +6,7 @@ from ovos_utils.messagebus import Message
 
 class BetterCommonPlaySkill(MycroftSkill):
     """ To integrate with the better common play infrastructure of Mycroft
-    skills should use this base class and override
+    skills should use this base class and override the two methods
     `CPS_search` (for searching the skill for media to play ) and
     `CPS_play` for launching the media if desired.
 
@@ -17,7 +17,7 @@ class BetterCommonPlaySkill(MycroftSkill):
 
     def __init__(self, name=None, bus=None):
         super().__init__(name, bus)
-        self.supported_media = [CPSMatchType.GENERIC, CPSMatchType.AUDIO]
+        self.supported_media = [CPSMatchType.GENERIC]
         self._current_query = None
         # NOTE: derived skills will likely want to override this list
 
@@ -66,12 +66,12 @@ class BetterCommonPlaySkill(MycroftSkill):
                                             "skill_id": self.skill_id,
                                             "searching": False}))
 
-    def CPS_extend_timeout(self, timeout=0.5):
+    def extend_timeout(self, timeout=0.5):
         """ request more time for searching, limits are defined by
         better-common-play framework, by default max total time is 5 seconds
         per query """
         if self._current_query:
-            self.bus.emit(Message("better_cps.query.response",
+            self.bus.emit(Message("play:query.response",
                                   {"phrase": self._current_query,
                                    "skill_id": self.skill_id,
                                    "timeout": timeout,

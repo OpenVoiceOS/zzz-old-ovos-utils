@@ -512,7 +512,7 @@ class GUIInterface:
                 else:
                     page_urls.append("file://" + page)
             else:
-                LOG.error("Unable to find page: {}".format(name))
+                raise FileNotFoundError("Unable to find page: {}".format(name))
         return page_urls
 
     def shutdown(self):
@@ -595,7 +595,7 @@ class GUIInterface:
                                ["Weather.qml", "Forecast.qml", "Other.qml"]
         """
         if not isinstance(page_names, list):
-            page_names = [page_names]
+            raise ValueError('page_names must be a list')
         page_urls = self._pages2uri(page_names)
         self.bus.emit(Message("gui.page.delete",
                               {"page": page_urls,
