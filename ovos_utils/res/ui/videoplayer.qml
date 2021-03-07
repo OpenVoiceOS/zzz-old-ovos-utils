@@ -12,7 +12,7 @@ Mycroft.Delegate {
     id: root
     property var media: sessionData.media
     property var videoSource: sessionData.stream
-    property var videoStatus: sessionData.playStatus
+    property var videoStatus: media.status
     property bool busyIndicate: false
 
     fillWidth: true
@@ -42,13 +42,13 @@ Mycroft.Delegate {
 
     onVideoStatusChanged: {
         switch(videoStatus){
-        case "stop":
+        case "Stopped":
             video.stop();
             break;
-        case "pause":
+        case "Paused":
             video.pause()
             break;
-        case "play":
+        case "Playing":
             video.play()
             delay(6000, function() {
                 infomationBar.visible = false;
@@ -70,9 +70,9 @@ Mycroft.Delegate {
         id: syncStatusTimer
         interval: 0
         onTriggered: {
-            if (enabled && videoStatus == "play") {
+            if (enabled && videoStatus == "Playing") {
                 video.play();
-            } else if (videoStatus == "stop") {
+            } else if (videoStatus == "Stopped") {
                 video.stop();
             } else {
                 video.pause();
