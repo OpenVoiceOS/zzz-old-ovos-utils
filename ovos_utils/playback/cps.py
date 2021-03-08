@@ -520,6 +520,7 @@ class BetterCommonPlayInterface:
         media = media or self.gui.get("media") or {}
         media["status"] = media.get("status", "Paused")
         media["position"] = media.get("position", 0)
+        media["length"] = media.get("length") or -1
         search = search or self.gui.get("searchModel", {}).get("data") or {}
         playlist = playlist or self.gui.get("playlistModel", {}).get("data") or {}
 
