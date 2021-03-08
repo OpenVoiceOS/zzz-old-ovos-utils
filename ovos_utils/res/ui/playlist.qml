@@ -158,7 +158,7 @@ Mycroft.Delegate {
                 }
                 
                 onClicked: {
-                    triggerGuiEvent("better-cps.gui.playlistPlay", {"playlistData": modelData})
+                    triggerGuiEvent("gui.playlist.play", {"playlistData": modelData})
                 }
             }
         }

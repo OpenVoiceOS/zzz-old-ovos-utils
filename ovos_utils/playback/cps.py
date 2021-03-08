@@ -15,15 +15,6 @@ class CPSPlayback(IntEnum):
     AUDIO = 2
 
 
-class CPSMatchLevel(IntEnum):
-    EXACT = 1
-    MULTI_KEY = 2
-    TITLE = 3
-    ARTIST = 4
-    CATEGORY = 5
-    GENERIC = 6
-
-
 class CPSMatchConfidence(IntEnum):
     EXACT = 95
     VERY_HIGH = 90
@@ -222,6 +213,12 @@ class BetterCommonPlayInterface:
         self.bus.on("better_cps.query.response", self.handle_cps_response)
         self.bus.on("better_cps.status.update", self.handle_cps_status_change)
         self.register_gui_handlers()
+
+    def shutdown(self):
+        self.bus.remove("better_cps.query.response", self.handle_cps_response)
+        self.bus.remove("better_cps.status.update",
+                        self.handle_cps_status_change)
+        self.gui.shutdown()
 
     def handle_cps_response(self, message):
         search_phrase = message.data["phrase"]
@@ -493,7 +490,6 @@ class BetterCommonPlayInterface:
 
     # ######### GUI integration ###############
     def register_gui_handlers(self):
-        # All Handlers For Player QML
         self.gui.register_handler('better-cps.gui.play',
                                   self.handle_click_resume)
         self.gui.register_handler('better-cps.gui.pause',
@@ -505,7 +501,6 @@ class BetterCommonPlayInterface:
         self.gui.register_handler('better-cps.gui.seek',
                                   self.handle_click_seek)
 
-        # All Handlers For Playlist QML
         self.gui.register_handler('better-cps.gui.playlist.play',
                                   self.handle_play_from_playlist)
         self.gui.register_handler('better-cps.gui.search.play',
@@ -634,14 +629,110 @@ class BetterCommonPlayInterface:
         self.play()
 
 
+class CPSTracker:
+    def __init__(self, bus=None, gui=None):
+        self.bus = bus or get_mycroft_bus()
+        self.bus.on("better_cps.query.response", self.handle_cps_response)
+        self.bus.on("better_cps.status.update", self.handle_cps_status_change)
+
+        self.gui = gui or GUIInterface("better-cps", bus=self.bus)
+        self.register_gui_handlers()
+
+    def register_gui_handlers(self):
+        self.gui.register_handler('better-cps.gui.play',
+                                  self.handle_click_resume)
+        self.gui.register_handler('better-cps.gui.pause',
+                                  self.handle_click_pause)
+        self.gui.register_handler('better-cps.gui.next',
+                                  self.handle_click_next)
+        self.gui.register_handler('better-cps.gui.previous',
+                                  self.handle_click_previous)
+        self.gui.register_handler('better-cps.gui.seek',
+                                  self.handle_click_seek)
+
+        self.gui.register_handler('better-cps.gui.playlist.play',
+                                  self.handle_play_from_playlist)
+        self.gui.register_handler('better-cps.gui.search.play',
+                                  self.handle_play_from_search)
+
+    def shutdown(self):
+        self.bus.remove("better_cps.query.response", self.handle_cps_response)
+        self.bus.remove("better_cps.status.update",
+                        self.handle_cps_status_change)
+        self.gui.shutdown()
+
+    def handle_cps_response(self, message):
+        search_phrase = message.data["phrase"]
+        skill = message.data['skill_id']
+        timeout = message.data.get("timeout")
+
+        if message.data.get("searching"):
+            if timeout:
+                self.on_extend_timeout(search_phrase, skill, timeout)
+        else:
+            self.on_skill_results(search_phrase, skill, message.data)
+
+    def handle_cps_status_change(self, message):
+        status = message.data["status"]
+        print("New status:", status)
+
+    def handle_click_resume(self, message):
+        print(message.data)
+
+    def handle_click_pause(self, message):
+        print(message.data)
+
+    def handle_click_next(self, message):
+        print(message.data)
+
+    def handle_click_previous(self, message):
+        print(message.data)
+
+    def handle_click_seek(self, message):
+        print(message.data)
+
+    def handle_play_from_playlist(self, message):
+        print(message.data)
+
+    def handle_play_from_search(self, message):
+        print(message.data)
+
+    # users can subclass these
+    def on_query(self, message):
+        pass
+
+    def on_skill_results(self, phrase, skill_id, results):
+        pass
+
+    def on_query_response(self, message):
+        pass
+
+    def on_status_change(self, message):
+        pass
+
+    def on_extend_timeout(self, phrase, timeout, skill_id):
+        print("extending timeout:", timeout, "\n",
+              "phrase:", phrase, "\n",
+              "skill:", skill_id, "\n")
+
+    def on_skill_play(self, message):
+        pass
+
+    def on_audio_play(self, message):
+        pass
+
+    def on_gui_play(self, message):
+        pass
+
+
 if __name__ == "__main__":
     from pprint import pprint
 
     cps = BetterCommonPlayInterface(max_timeout=10, min_timeout=2)
 
     # test lovecraft skills
-    # pprint(cps.search("dagon"))
-    pprint(cps.search("astronaut problems"))
+    pprint(cps.search("dagon"))
+
     exit()
     pprint(cps.search("the thing in the doorstep"))
 
