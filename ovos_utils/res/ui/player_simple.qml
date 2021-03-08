@@ -40,8 +40,8 @@ Mycroft.Delegate {
     property var playerDuration: media.length
     property real playerPosition: 0
     property var playerState: media.status
-    property var nextAction: "better-cps.gui.nextAction"
-    property var previousAction: "better-cps.gui.previousAction"
+    property var nextAction: "gui.next"
+    property var previousAction: "gui.previous"
     property bool countdowntimerpaused: false
 
     function formatedDuration(millis){
@@ -189,7 +189,7 @@ Mycroft.Delegate {
                                 onClicked: {
                                     if (playerState != "Playing"){
                                         console.log("in resume action")
-                                        triggerGuiEvent("better-cps.gui.playAction", {"media": {
+                                        triggerGuiEvent("gui.play", {"media": {
                                                                 "image": media.image,
                                                                 "track": media.track,
                                                                 "album": media.album,
@@ -198,7 +198,7 @@ Mycroft.Delegate {
                                                                 "position": playerPosition,
                                                                 "status": "Playing"}})
                                     } else {
-                                        triggerGuiEvent("better-cps.gui.pauseAction", {"media": {
+                                        triggerGuiEvent("gui.pause", {"media": {
                                                                 "image": media.image,
                                                                 "title": media.title,
                                                                 "album": media.album,
@@ -260,7 +260,7 @@ Mycroft.Delegate {
             
             onValueChanged: {
                 if(root.countdowntimerpaused){
-                    triggerGuiEvent("better-cps.gui.playerSeekAction",
+                    triggerGuiEvent("gui.seek",
                     {"seekValue":
                     value})
                 }
