@@ -158,7 +158,7 @@ Mycroft.Delegate {
                 }
                 
                 onClicked: {
-                    triggerGuiEvent("better-cps.gui.searchPlay",
+                    triggerGuiEvent("gui.search.play",
                     {"playlistData": modelData})
                 }
             }
