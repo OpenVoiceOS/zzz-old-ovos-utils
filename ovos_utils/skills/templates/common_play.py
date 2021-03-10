@@ -17,7 +17,7 @@ class BetterCommonPlaySkill(MycroftSkill):
 
     def __init__(self, name=None, bus=None):
         super().__init__(name, bus)
-        self.supported_media = [CPSMatchType.GENERIC]
+        self.supported_media = [CPSMatchType.GENERIC, CPSMatchType.AUDIO]
         self._current_query = None
         # NOTE: derived skills will likely want to override this list
 
