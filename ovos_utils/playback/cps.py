@@ -43,7 +43,8 @@ class CPSTrackStatus(IntEnum):
 
 
 class CPSMatchType(IntEnum):
-    GENERIC = 1
+    GENERIC = 0
+    AUDIO = 1
     MUSIC = 2
     VIDEO = 3
     AUDIOBOOK = 4
@@ -511,11 +512,10 @@ class BetterCommonPlayInterface:
         self.display_ui(page=page)
 
     def display_ui(self, search=None, media=None, playlist=None, page=0):
-        search_qml = "disambiguation.qml"
-        player_qml = "player_simple.qml"
-        player_no_seek_qml = "player_basic.qml"
-        video_player_qml = "videoplayer.qml"
-        playlist_qml = "playlist.qml"
+        search_qml = "Disambiguation.qml"
+        player_qml = "AudioPlayer.qml"
+        video_player_qml = "VideoPlayer.qml"
+        playlist_qml = "Playlist.qml"
 
         media = media or self.gui.get("media") or {}
         media["status"] = media.get("status", "Paused")
@@ -524,7 +524,11 @@ class BetterCommonPlayInterface:
         search = search or self.gui.get("searchModel", {}).get("data") or {}
         playlist = playlist or self.gui.get("playlistModel", {}).get("data") or {}
 
-        # change "now playing" page depending on media type
+        # remove previous pages
+        pages = [player_qml, search_qml, playlist_qml, video_player_qml]
+        self.gui.remove_pages(pages)
+
+        # display "now playing" video page
         if media.get("playback", -1) == CPSPlayback.GUI:
             uri = media.get("stream") or \
                   media.get("url") or \
@@ -533,10 +537,8 @@ class BetterCommonPlayInterface:
             self.gui["title"] = media.get("title", "")
             self.gui["playStatus"] = "play"
             pages = [video_player_qml, search_qml, playlist_qml]
-        # display "now playing" page seekbar depending on duration info
-        elif not media.get("length"):
-            pages = [player_no_seek_qml, search_qml, playlist_qml]
-        # display default pages
+
+        # display "now playing" music page
         else:
             pages = [player_qml, search_qml, playlist_qml]
 

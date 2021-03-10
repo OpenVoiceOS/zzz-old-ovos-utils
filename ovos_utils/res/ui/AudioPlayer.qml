@@ -31,6 +31,8 @@ Mycroft.Delegate {
     property int imageWidth: Kirigami.Units.gridUnit * 10
     skillBackgroundColorOverlay: Qt.rgba(0, 0, 0, 0.85)
     property bool bigMode: width > 800 && height > 600 ? 1 : 0
+    property bool horizontalMode: width * 0.8 >= height ? 1 : 0
+    property bool isVertical: sessionData.isVertical
 
     // Assumption Track_Length is always in milliseconds
     // Assumption current_Position is always in milleseconds and relative to length if length = 530000, position values range from 0 to 530000
@@ -43,6 +45,12 @@ Mycroft.Delegate {
     property var nextAction: "gui.next"
     property var previousAction: "gui.previous"
     property bool countdowntimerpaused: false
+
+    onIsVerticalChanged: {
+        if(isVertical){
+            root.horizontalMode = false
+        }
+    }
 
     function formatedDuration(millis){
         var minutes = Math.floor(millis / 60000);
@@ -83,11 +91,11 @@ Mycroft.Delegate {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: bigMode ? parent.width * 0.075 : 0
-        
+
         Rectangle {
             Layout.fillWidth: true
             Layout.minimumHeight: songtitle.contentHeight
-            color: Qt.rgba(0, 0, 0, 0.8)
+            color: "transparent"
 
             Kirigami.Heading {
                 id: songtitle
@@ -105,19 +113,20 @@ Mycroft.Delegate {
                 width: parent.width
             }
         }
-        
+
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
             color: "transparent"
-            
-            ColumnLayout {
+
+            GridLayout {
                 id: mainLayout
                 anchors.fill: parent
+                columns: horizontalMode ? 2 : 1
 
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    Layout.preferredHeight: mainLayout.columns > 1 ? parent.height : parent.height / 1.5
                     color: "transparent"
 
                     Image {
@@ -132,29 +141,34 @@ Mycroft.Delegate {
                         anchors.topMargin: parent.height * 0.05
                         anchors.bottomMargin: parent.height * 0.05
                         source: media.image
-                        layer.enabled: true
-                        layer.effect: DropShadow {
-                            horizontalOffset: 1
-                            verticalOffset: 2
-                            spread: 0.2
-                        }
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        z: 100
+                    }
+
+
+                    RectangularGlow {
+                        id: effect
+                        anchors.fill: albumimg
+                        glowRadius: 5
+                        color: Qt.rgba(0, 0, 0, 0.7)
+                        cornerRadius: 10
                     }
                 }
 
                 ColumnLayout {
                     Layout.fillWidth: true
-
+                    Layout.fillHeight: true
 
                     Rectangle {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 150
-                        Layout.preferredWidth:parent.width
+                        Layout.fillHeight: true
                         color: "transparent"
 
                         RowLayout {
                             anchors.fill: parent
-                            anchors.margins: Kirigami.Units.largeSpacing
-                            spacing: Kirigami.Units.largeSpacing * 2
+                            anchors.margins: horizontalMode ? Kirigami.Units.largeSpacing : Kirigami.Units.largeSpacing * 2
+                            spacing: horizontalMode ? Kirigami.Units.largeSpacing * 3 : Kirigami.Units.largeSpacing * 5
 
                             Controls.Button {
                                 id: previousButton
@@ -246,10 +260,16 @@ Mycroft.Delegate {
             to: playerDuration
             Layout.fillWidth: true
             Layout.minimumHeight: Kirigami.Units.gridUnit * 2
+            Layout.leftMargin: Kirigami.Units.largeSpacing
+            Layout.rightMargin: Kirigami.Units.largeSpacing
+            Layout.bottomMargin: Kirigami.Units.largeSpacing
+            Layout.topMargin: Kirigami.Units.smallSpacing
             property bool sync: false
             live: false
+            visible: media.length !== -1 ? 1 : 0
+            enabled: media.length !== -1 ? 1 : 0
             value: playerPosition
-            
+
             onPressedChanged: {
                 if(seekableslider.pressed){
                     root.countdowntimerpaused = true
@@ -257,25 +277,23 @@ Mycroft.Delegate {
                     root.countdowntimerpaused = false
                 )
             }
-            
+
             onValueChanged: {
                 if(root.countdowntimerpaused){
-                    triggerGuiEvent("gui.seek",
-                    {"seekValue":
-                    value})
+                    triggerGuiEvent("gui.seek", {"seekValue": value})
                 }
             }
 
             handle: Item {
-                x: seekableslider.leftPadding + seekableslider.visualPosition * (seekableslider.availableWidth - width)
+                x: seekableslider.visualPosition * (parent.width - (Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing))
                 anchors.verticalCenter: parent.verticalCenter
                 height: Kirigami.Units.iconSizes.large
 
                 Rectangle {
                     id: hand
                     anchors.verticalCenter: parent.verticalCenter
-                    implicitWidth: Kirigami.Units.iconSizes.small
-                    implicitHeight: Kirigami.Units.iconSizes.small
+                    implicitWidth: Kirigami.Units.iconSizes.small + Kirigami.Units.smallSpacing
+                    implicitHeight: Kirigami.Units.iconSizes.small + Kirigami.Units.smallSpacing
                     radius: 100
                     color: seekableslider.pressed ? "#f0f0f0" : "#f6f6f6"
                     border.color: "#bdbebf"
@@ -283,6 +301,7 @@ Mycroft.Delegate {
 
                 Controls.Label {
                     anchors.bottom: parent.bottom
+                    anchors.bottomMargin: -Kirigami.Units.smallSpacing
                     anchors.horizontalCenter: hand.horizontalCenter
                     //horizontalAlignment: Text.AlignHCenter
                     text: formatedDuration(playerPosition)
@@ -294,15 +313,19 @@ Mycroft.Delegate {
                 y: seekableslider.topPadding + seekableslider.availableHeight / 2 - height / 2
                 implicitHeight: 10
                 width: seekableslider.availableWidth
-                height: implicitHeight
+                height: implicitHeight + Kirigami.Units.largeSpacing
                 radius: 10
                 color: "#bdbebf"
 
                 Rectangle {
                     width: seekableslider.visualPosition * parent.width
                     height: parent.height
-                    color: "#21be2b"
-                    radius: 2
+                    gradient: Gradient {
+                        orientation: Gradient.Horizontal
+                        GradientStop { position: 0.0; color: "#21bea6" }
+                        GradientStop { position: 1.0; color: "#2194be" }
+                    }
+                    radius: 9
                 }
             }
         }
