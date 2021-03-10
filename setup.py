@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='ovos_utils',
-    version='0.0.7',
+    version='0.0.8a1',
     packages=['ovos_utils',
               'ovos_utils.waiting_for_mycroft',
               'ovos_utils.misc',
@@ -13,6 +13,7 @@ setup(
               'ovos_utils.enclosure.mark1.eyes',
               'ovos_utils.enclosure.mark1.faceplate',
               'ovos_utils.skills',
+              'ovos_utils.playback',
               'ovos_utils.plugins',
               'ovos_utils.skills.templates',
               'ovos_utils.lang'],
