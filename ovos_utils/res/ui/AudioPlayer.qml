@@ -15,8 +15,9 @@
     *
     */
 
-import QtQuick 2.9
-import QtQuick.Controls 2.3 as Controls
+import QtQuick 2.12
+import QtMultimedia 5.12
+import QtQuick.Controls 2.12 as Controls
 import QtQuick.Templates 2.12 as T
 import QtQuick.Layouts 1.3
 import org.kde.kirigami 2.8 as Kirigami
@@ -31,11 +32,11 @@ Mycroft.Delegate {
     property int imageWidth: Kirigami.Units.gridUnit * 10
     skillBackgroundColorOverlay: Qt.rgba(0, 0, 0, 0.85)
     property bool bigMode: width > 800 && height > 600 ? 1 : 0
-    property bool horizontalMode: width * 0.8 >= height ? 1 : 0
+    property bool horizontalMode: width >= height * 1.3 ? 1 : 0
     property bool isVertical: sessionData.isVertical
 
     // Assumption Track_Length is always in milliseconds
-    // Assumption current_Position is always in milleseconds and relative to length if length = 530000, position values range from 0 to 530000
+    // Assumption current_Position is always in milleseconds and relative to track_length if track_length = 530000, position values range from 0 to 530000
 
     property var media: sessionData.media
     property var compareModel
@@ -90,7 +91,7 @@ Mycroft.Delegate {
     
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: bigMode ? parent.width * 0.075 : 0
+        anchors.margins: bigMode ? parent.width * 0.025 : 0
 
         Rectangle {
             Layout.fillWidth: true
@@ -102,6 +103,7 @@ Mycroft.Delegate {
                 text: media.title
                 level: 1
                 maximumLineCount: 1
+                width: parent.width
                 font.pixelSize: parent.width * 0.060
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
@@ -110,7 +112,6 @@ Mycroft.Delegate {
                 font.bold: true
                 visible: true
                 enabled: true
-                width: parent.width
             }
         }
 
@@ -131,15 +132,10 @@ Mycroft.Delegate {
 
                     Image {
                         id: albumimg
-                        fillMode: Image.PreserveAspectFit
                         visible: true
                         enabled: true
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.topMargin: parent.height * 0.05
-                        anchors.bottomMargin: parent.height * 0.05
+                        width: parent.height * 0.9
+                        height: width
                         source: media.image
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.horizontalCenter: parent.horizontalCenter
