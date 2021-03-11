@@ -47,7 +47,7 @@ class VideoCollectionSkill(BetterCommonPlaySkill):
         if "min_score" not in self.settings:
             self.settings["min_score"] = 40
         if "match_description" not in self.settings:
-            self.settings["match_description"] = False
+            self.settings["match_description"] = True
         if "match_tags" not in self.settings:
             self.settings["match_tags"] = True
         if "match_title" not in self.settings:
@@ -262,7 +262,7 @@ class VideoCollectionSkill(BetterCommonPlaySkill):
         score = fuzzy_match(clean_phrase, self.normalize_title(title)) * 100
         if phrase.lower() in title.lower() or \
                 clean_phrase in self.normalize_title(title):
-            score += 10
+            score += 25
         if phrase.lower() in title.lower().split(" ") or \
                 clean_phrase in self.normalize_title(title).split(" "):
             score += 30
