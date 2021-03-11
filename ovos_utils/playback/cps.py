@@ -290,6 +290,10 @@ class BetterCommonPlayInterface:
             return self.search(phrase, media_type=CPSMatchType.GENERIC)
         return []
 
+    def search_skill(self, skill_id, phrase, media_type=CPSMatchType.GENERIC):
+        res = self.search(phrase, media_type)
+        return [r for r in res if r["skill_id"] == skill_id]
+
     def process_search(self, selected, results):
         # TODO playlist
         self._update_current_media(selected)
@@ -738,7 +742,7 @@ if __name__ == "__main__":
     cps = BetterCommonPlayInterface(max_timeout=10, min_timeout=2)
 
     # test lovecraft skills
-    pprint(cps.search("dagon"))
+    pprint(cps.search_skill("skill-omeleto", "movie", CPSMatchType.SHORT_FILM))
 
     exit()
     pprint(cps.search("the thing in the doorstep"))
