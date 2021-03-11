@@ -59,6 +59,7 @@ class CPSMatchType(IntEnum):
     VISUAL_STORY = 13
     BEHIND_THE_SCENES = 14
     DOCUMENTARY = 15
+    RADIO_THEATRE = 16
 
 
 class CommonPlayInterface:
