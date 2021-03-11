@@ -404,9 +404,13 @@ class BetterCommonPlayInterface:
 
     # playback control
     def play(self):
+
         data = self.playback_data.get("playing") or {}
         uri = data.get("stream") or data.get("uri") or data.get("url")
         skill_id = self.active_skill = data["skill_id"]
+
+        self.stop()
+
         if data["playback"] == CPSPlayback.AUDIO:
             data["status"] = CPSTrackStatus.PLAYING_AUDIOSERVICE
             real_url = self.get_stream(uri)
@@ -483,8 +487,6 @@ class BetterCommonPlayInterface:
             self.audio_service.stop()
         elif self.active_backend is not None:
             self.bus.emit(Message(f'better_cps.{self.active_skill}.stop'))
-
-        self.gui.release()
         self.update_status({"status": CPSTrackStatus.END_OF_MEDIA})
         stopped = self.active_backend is not None
         self.active_backend = None
