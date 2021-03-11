@@ -330,7 +330,7 @@ class VideoCollectionSkill(BetterCommonPlaySkill):
                 "playback": self.playback_type,
                 "skill_icon": self.skill_icon,
                 "skill_logo": self.skill_logo,
-                "bg_image": self.default_bg,
+                "bg_image": video.get("logo") or self.default_bg,
                 "image": video.get("logo") or self.default_image,
                 "author": self.name
             }))
