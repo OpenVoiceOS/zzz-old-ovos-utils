@@ -465,7 +465,7 @@ class MycroftSkill(_MycroftSkill):
 
         if utt:
             # Check for matches against complete words
-            for i in self.voc_match_cache[cache_key]:
+            for i in self.voc_match_cache.get(cache_key) or []:
                 # Substitute only whole words matching the token
                 utt = re.sub(r'\b' + i + r"\b", "", utt)
 
