@@ -61,6 +61,8 @@ class CPSMatchType(IntEnum):
     DOCUMENTARY = 15
     RADIO_THEATRE = 16
     SHORT_FILM = 17
+    SILENT_MOVIE = 18
+    BLACK_WHITE_MOVIE = 20
 
 
 class CommonPlayInterface:
@@ -291,8 +293,11 @@ class BetterCommonPlayInterface:
         return []
 
     def search_skill(self, skill_id, phrase, media_type=CPSMatchType.GENERIC):
-        res = self.search(phrase, media_type)
-        return [r for r in res if r["skill_id"] == skill_id]
+        res = [r for r in self.search(phrase, media_type)
+               if r["skill_id"] == skill_id]
+        if not len(res):
+            return None
+        return res[0]
 
     def process_search(self, selected, results):
         # TODO playlist
@@ -582,7 +587,7 @@ class BetterCommonPlayInterface:
                 "album": r.get('skill_id'),
                 "duration": r.get('length'),
                 "image": r.get('image'),
-                "source": r.get('skill_logo'),
+                "source": r.get('skill_icon') or r.get('skill_logo'),
                 "track": r.get("title")
             })
         return playlist_data
@@ -739,10 +744,16 @@ class CPSTracker:
 if __name__ == "__main__":
     from pprint import pprint
 
-    cps = BetterCommonPlayInterface(max_timeout=10, min_timeout=2)
-
+    cps = BetterCommonPlayInterface(max_timeout=4, min_timeout=1)
+    res = cps.search_skill("skill-news", "portuguese",
+                           media_type=CPSMatchType.NEWS)
+    if res:
+        res = sorted(res["results"], key=lambda k: k['match_confidence'],
+                     reverse=True)
+    pprint(res)
     # test lovecraft skills
-    pprint(cps.search_skill("skill-omeleto", "movie", CPSMatchType.SHORT_FILM))
+    #pprint(cps.search_skill("skill-omeleto", "movie",
+    # CPSMatchType.SHORT_FILM))
 
     exit()
     pprint(cps.search("the thing in the doorstep"))
