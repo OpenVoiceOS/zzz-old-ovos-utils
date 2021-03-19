@@ -60,6 +60,8 @@ class M3UParser:
             m3ustr = [l for l in m3ustr if l.strip()]
 
         streamz = []
+        m3ustr = [ l for l in m3ustr if
+                   l.startswith("#EXTINF:") or l.startswith("http")]
         for idx, line in enumerate(m3ustr):
             next_line = m3ustr[idx + 1] if idx + 1 < len(m3ustr) else None
             if line.startswith("#EXTINF:"):
