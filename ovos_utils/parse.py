@@ -52,8 +52,8 @@ def fuzzy_match(x, against, strategy=MatchStrategy.SIMPLE_RATIO):
         score = rapidfuzz.fuzz.partial_token_set_ratio(x, against) / 100
     elif strategy == MatchStrategy.PARTIAL_TOKEN_RATIO:
         score = rapidfuzz.fuzz.partial_token_ratio(x, against) / 100
-    elif strategy == MatchStrategy.QUICK_LEV_RATIO:
-        score = rapidfuzz.fuzz.quick_lev_ratio(x, against) / 100
+#    elif strategy == MatchStrategy.QUICK_LEV_RATIO:
+#        score = rapidfuzz.fuzz.quick_lev_ratio(x, against) / 100
     else:
         score = SequenceMatcher(None, x, against).ratio()
 
