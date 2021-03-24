@@ -1,24 +1,12 @@
 from os.path import join, dirname, basename
-import random
-from ovos_utils import get_mycroft_root, datestr2ts, resolve_ovos_resource_file
+from ovos_utils import datestr2ts, resolve_ovos_resource_file
 from ovos_utils.log import LOG
 from ovos_utils.parse import fuzzy_match
 from ovos_utils.json_helper import merge_dict
 from json_database import JsonStorageXDG
 import random
 from ovos_utils.skills.templates.common_play import BetterCommonPlaySkill
-from ovos_utils.playback import CPSMatchType, CPSPlayback, CPSMatchConfidence
-try:
-    from mycroft.skills.core import intent_file_handler
-except ImportError:
-    import sys
-    MYCROFT_ROOT_PATH = get_mycroft_root()
-    if MYCROFT_ROOT_PATH is not None:
-        sys.path.append(MYCROFT_ROOT_PATH)
-        from mycroft.skills.core import intent_file_handler
-    else:
-        LOG.error("Could not find mycroft root path")
-        raise ImportError
+from ovos_utils.playback import CPSMatchType, CPSPlayback
 
 try:
     import pyvod

@@ -36,7 +36,11 @@ class M3UParser:
         header = " ".join([w for w in header.split(" ") if w])
         values, name = header.replace("#EXTINF:", "").split(",")
         values = values.split("=")
-        duration, k = values[0].split(" ")
+        _ = values[0].split(" ")
+        if len(_) == 1:
+            duration = _[0]
+        else:
+            duration, k = _
         data = {"title": name, "duration": int(duration)}
         for d in values[1:]:
             val = " ".join(d.split(" ")[:-1])

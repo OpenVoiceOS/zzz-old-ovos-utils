@@ -1,10 +1,10 @@
 from ovos_utils import get_handler_name
 from ovos_utils.log import LOG
 from ovos_utils.lang.translate import detect_lang, translate_text
-from ovos_utils.waiting_for_mycroft.base_skill import MycroftSkill, FallbackSkill
+from ovos_utils.skills.templates import OVOSSkill, OVOSFallbackSkill
 
 
-class UniversalSkill(MycroftSkill):
+class UniversalSkill(OVOSSkill):
     ''' Skill that auto translates input/output from any language '''
 
     def __init__(self, name=None, bus=None):
@@ -68,7 +68,7 @@ class UniversalSkill(MycroftSkill):
         super().speak(utterance, expect_response, wait)
 
 
-class UniversalFallback(UniversalSkill, FallbackSkill):
+class UniversalFallback(UniversalSkill, OVOSFallbackSkill):
     ''' Fallback Skill that auto translates input/output from any language '''
 
     def create_universal_fallback_handler(self, handler):

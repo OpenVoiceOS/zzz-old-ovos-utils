@@ -48,7 +48,7 @@ def load_commented_json(filename):
     independent line starting with '//' or '#'.
 
     NOTE: A file created with these style comments will break strict JSON
-          parsers.  This is similar to but lighter-weight than "human json"
+          parsers.  This is compatible to but lighter-weight than "human json"
           proposed at https://hjson.org
 
     Args:
@@ -92,4 +92,21 @@ def uncomment_json(commented_json_str):
         nocomment.append(line)
 
     return " ".join(nocomment)
+
+
+def is_compatible_dict(base, delta):
+    """
+    returns False if any key common to base/delta has a different type,
+    except for None values, dicts are evaluated recursively
+    """
+    common_keys = [k for k in base if k in delta]
+    for k in common_keys:
+        if base[k] is None or delta[k] is None:
+            continue
+        elif isinstance(base[k], dict) and isinstance(delta[k], dict):
+            if not is_compatible_dict(delta[k], base[k]):
+                return False
+        elif type(base[k]) != type(delta[k]):
+            return False
+    return True
 
