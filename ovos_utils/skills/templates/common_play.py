@@ -1,10 +1,10 @@
 from abc import abstractmethod
-from ovos_utils.waiting_for_mycroft.base_skill import MycroftSkill
+from ovos_utils.skills.templates import OVOSSkill
 from ovos_utils.playback import CPSMatchType
 from ovos_utils.messagebus import Message
 
 
-class BetterCommonPlaySkill(MycroftSkill):
+class BetterCommonPlaySkill(OVOSSkill):
     """ To integrate with the better common play infrastructure of Mycroft
     skills should use this base class and override
     `CPS_search` (for searching the skill for media to play ) and
