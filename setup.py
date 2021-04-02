@@ -11,7 +11,6 @@ setup(
               'ovos_utils.enclosure.mark1.eyes',
               'ovos_utils.enclosure.mark1.faceplate',
               'ovos_utils.skills',
-              'ovos_utils.skills.decorators',
               'ovos_utils.lang'],
     url='https://github.com/OpenVoiceOS/ovos_utils',
     install_requires=[
