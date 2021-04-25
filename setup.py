@@ -16,6 +16,7 @@ setup(
     install_requires=[
         "mycroft-messagebus-client",
         "pexpect",
+        "pyxdg",
         "PyYAML",
         "kthread",
         "json_database",

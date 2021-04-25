@@ -1,6 +1,7 @@
 from ovos_utils.configuration import read_mycroft_config, update_mycroft_config
 from ovos_utils.messagebus import wait_for_reply
 from os.path import join, isdir
+import xdg
 
 
 def skills_loaded(bus=None):
@@ -64,12 +65,14 @@ def get_skills_folder(config=None):
     # once XDG PR is merged skills folder will no longer be configurable,
     # skills are moved automatically to new locations
     # this is already live in mycroft-lib
-    xdg_skills = "/usr/share/mycroft/skills/"
+    xdg_skills = xdg.BaseDirectory.save_data_path('mycroft/skills')
     if isdir(xdg_skills):
         return xdg_skills
     config = config or read_mycroft_config()
     if config:
         skill_folder = config["skills"]["msm"]["directory"]
         return join(config["data_dir"], skill_folder)
-    else:  # .conf not found, return default path
+    else:
+        # .conf not found, xdg directory not detected, doesn't look like we
+        # are running mycroft-core, just return default path
         return "/opt/mycroft/skills"
