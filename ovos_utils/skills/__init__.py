@@ -69,10 +69,14 @@ def get_skills_folder(config=None):
     if isdir(xdg_skills):
         return xdg_skills
     config = config or read_mycroft_config()
+    # read user defined location
     if config:
         skill_folder = config["skills"]["msm"]["directory"]
         return join(config["data_dir"], skill_folder)
-    else:
-        # .conf not found, xdg directory not detected, doesn't look like we
-        # are running mycroft-core, just return default path
+    # check if default path exists
+    elif isdir("/opt/mycroft/skills"):
         return "/opt/mycroft/skills"
+
+    # .conf not found, xdg directory not detected, default path not
+    # detected, doesn't look like we are running mycroft-core
+    return None
