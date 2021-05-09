@@ -9,7 +9,7 @@ import sysconfig
 from enum import Enum
 import platform
 import socket
-from os.path import expanduser, exists, join
+from os.path import expanduser, exists, join, isfile
 
 
 class MycroftRootLocations(str, Enum):
@@ -158,11 +158,41 @@ def get_platform_fingerprint():
         "release": platform.release(),
         "desktop_env": get_desktop_environment(),
         "mycroft_core_location": search_mycroft_core_location(),
+        "mycroft_core_version": get_mycroft_version(),
         "can_display": has_screen(),
         "is_gui_installed": is_installed("mycroft-gui-app"),
         "is_vlc_installed": is_installed("vlc"),
         "pulseaudio_running": is_process_running("pulseaudio")
     }
+
+
+def get_mycroft_version():
+    try:
+        from mycroft.version import CORE_VERSION_STR
+        return CORE_VERSION_STR
+    except:
+        root = search_mycroft_core_location()
+        version_file = join(root, "version", "__init__.py")
+        if not isfile(version_file):
+            version_file = join(root, "mycroft", "version", "__init__.py")
+        if isfile(version_file):
+            version = []
+            with open(version_file) as f:
+                text = f.read()
+                version.append(
+                    text.split("CORE_VERSION_MAJOR =")[-1].split("\n")[0].strip())
+                version.append(
+                    text.split("CORE_VERSION_MINOR =")[-1].split("\n")[0].strip())
+                version.append(
+                    text.split("CORE_VERSION_BUILD =")[-1].split("\n")[0].strip())
+                version = ".".join(version)
+                if "CORE_VERSION_STR = '.'.join(map(str, " \
+                   "CORE_VERSION_TUPLE)) + " in text:
+                    version += text.split(
+                        "CORE_VERSION_STR = '.'.join(map(str, "
+                        "CORE_VERSION_TUPLE)) + ")[-1].split("\n")[0][1:-1]
+                return version
+        return None
 
 
 def ntp_sync():
