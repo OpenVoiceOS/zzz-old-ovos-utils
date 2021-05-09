@@ -40,8 +40,4 @@ def is_connected_http(host="http://duckduckgo.com"):
 
 
 def is_connected():
-    if is_connected_dns():
-        return True
-    if is_connected_http():
-        return True
-    return False
+    return any((is_connected_dns(), is_connected_http()))
