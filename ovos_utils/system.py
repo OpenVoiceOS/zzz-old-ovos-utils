@@ -189,19 +189,30 @@ def get_platform_fingerprint():
         "release": platform.release(),
         "desktop_env": get_desktop_environment(),
         "mycroft_core_location": search_mycroft_core_location(),
-        "mycroft_core_version": get_mycroft_version(),
         "can_display": has_screen(),
         "is_gui_installed": is_installed("mycroft-gui-app"),
         "is_vlc_installed": is_installed("vlc"),
-        "pulseaudio_running": is_process_running("pulseaudio")
+        "pulseaudio_running": is_process_running("pulseaudio"),
+        "core_version": {
+            "version_str": get_mycroft_version(),
+            "is_chatterbox_core": is_chatterbox_core(),
+            "is_neon_core": is_neon_core(),
+            "is_holmes": is_holmes(),
+            "is_ovos": is_ovos(),
+            "is_mycroft_core": is_mycroft_core()
+        }
     }
+
 
 def get_mycroft_version():
     try:
         from mycroft.version import CORE_VERSION_STR
         return CORE_VERSION_STR
     except:
-        root = search_mycroft_core_location()
+        pass
+
+    root = search_mycroft_core_location()
+    if root:
         version_file = join(root, "version", "__init__.py")
         if not isfile(version_file):
             version_file = join(root, "mycroft", "version", "__init__.py")
@@ -249,6 +260,9 @@ def is_mycroft_core():
         return False
 
 
-def is_holmesV():
-    return "HolmvesV" in ""
+def is_holmes():
+    return "HolmesV" in (get_mycroft_version() or "")
 
+
+def is_ovos():
+    return "OpenVoiceOS" in (get_mycroft_version() or "")
