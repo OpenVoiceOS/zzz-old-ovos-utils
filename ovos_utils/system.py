@@ -246,7 +246,7 @@ def is_chatterbox_core():
 
 def is_neon_core():
     try:
-        import chatterbox
+        import neon_core
         return True
     except ImportError:
         return False
