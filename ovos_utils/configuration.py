@@ -1,38 +1,18 @@
 from os.path import isfile, exists, expanduser, join, dirname, isdir
 from os import makedirs
 import json
-
 from ovos_utils.log import LOG
 from ovos_utils.json_helper import merge_dict, load_commented_json
-from ovos_utils.system import search_mycroft_core_location, core_supports_xdg
+from ovos_utils.system import search_mycroft_core_location
 from xdg import BaseDirectory as XDG
-
+from ovos_utils.fingerprinting import core_supports_xdg, \
+    detect_platform, MycroftPlatform, get_config_fingerprint
 
 MYCROFT_SYSTEM_CONFIG = "/etc/mycroft/mycroft.conf"
 MYCROFT_OLD_USER_CONFIG = join(expanduser("~"), ".mycroft", "mycroft.conf")
 MYCROFT_XDG_USER_CONFIG = join(XDG.save_config_path('mycroft'), 'mycroft.conf')
 
-if core_supports_xdg():
-    MYCROFT_USER_CONFIG = MYCROFT_XDG_USER_CONFIG
-else:
-    MYCROFT_USER_CONFIG = MYCROFT_OLD_USER_CONFIG
-
-
-def get_config_fingerprint(config=None):
-    conf = config or read_mycroft_config()
-    listener_conf = conf.get("listener", {})
-    skills_conf = conf.get("skills", {})
-    return {
-        "enclosure": conf.get("enclosure", {}).get("platform"),
-        "data_dir": conf.get("data_dir"),
-        "msm_skills_dir": skills_conf.get("msm", {}).get("directory"),
-        "ipc_path": conf.get("ipc_path"),
-        "input_device_name": listener_conf.get("device_name"),
-        "input_device_index": listener_conf.get("device_index"),
-        "default_audio_backend": conf.get("Audio", {}).get("default-backend"),
-        "priority_skills": skills_conf.get("priority_skills"),
-        "backend_url": conf.get("server", {}).get("url")
-    }
+MYCROFT_USER_CONFIG = MYCROFT_XDG_USER_CONFIG
 
 
 def read_mycroft_config():
@@ -112,6 +92,7 @@ class LocalConf(dict):
 
 class ReadOnlyConfig(LocalConf):
     """ read only  """
+
     def __init__(self, path, allow_overwrite=False):
         super().__init__(path)
         self.allow_overwrite = allow_overwrite
@@ -149,17 +130,9 @@ class MycroftUserConfig(LocalConf):
             path = MYCROFT_XDG_USER_CONFIG
         else:
             path = MYCROFT_USER_CONFIG
-
             # mark1 runs as a different user
-            try:
-                from ovos_utils.enclosure import detect_enclosure
-                from ovos_utils.enclosure import MycroftEnclosures
-                enclosure = detect_enclosure()
-                if enclosure == MycroftEnclosures.MARK1 or \
-                        enclosure == MycroftEnclosures.OLD_MARK1:
-                    path = "/home/mycroft/.mycroft/mycroft.conf"
-            except Exception as e:
-                pass
+            if detect_platform() == MycroftPlatform.MARK1:
+                path = "/home/mycroft/.mycroft/mycroft.conf"
 
         if not isfile(path) and isfile(MYCROFT_OLD_USER_CONFIG):
             # xdg might be disabled in HolmesV compatibility mode
