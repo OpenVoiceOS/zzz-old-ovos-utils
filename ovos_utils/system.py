@@ -22,6 +22,37 @@ class MycroftRootLocations(str, Enum):
     HOME = expanduser("~/mycroft-core")  # git clones
 
 
+# system utils
+def ntp_sync():
+    # Force the system clock to synchronize with internet time servers
+    subprocess.call('service ntp stop', shell=True)
+    subprocess.call('ntpd -gq', shell=True)
+    subprocess.call('service ntp start', shell=True)
+
+
+def system_shutdown():
+    # Turn the system completely off (with no option to inhibit it)
+    subprocess.call('sudo systemctl poweroff -i', shell=True)
+
+
+def system_reboot():
+    # Shut down and restart the system
+    subprocess.call('sudo systemctl reboot -i', shell=True)
+
+
+def ssh_enable():
+    # Permanently allow SSH access
+    subprocess.call('sudo systemctl enable ssh.service', shell=True)
+    subprocess.call('sudo systemctl start ssh.service', shell=True)
+
+
+def ssh_disable():
+    # Permanently block SSH access from the outside
+    subprocess.call('sudo systemctl stop ssh.service', shell=True)
+    subprocess.call('sudo systemctl disable ssh.service', shell=True)
+
+
+# platform fingerprinting
 def find_root_from_sys_path():
     """Find mycroft root folder from sys.path, eg. venv site-packages."""
     for p in [path for path in sys.path if path != '']:
@@ -165,7 +196,6 @@ def get_platform_fingerprint():
         "pulseaudio_running": is_process_running("pulseaudio")
     }
 
-
 def get_mycroft_version():
     try:
         from mycroft.version import CORE_VERSION_STR
@@ -195,30 +225,30 @@ def get_mycroft_version():
         return None
 
 
-def ntp_sync():
-    # Force the system clock to synchronize with internet time servers
-    subprocess.call('service ntp stop', shell=True)
-    subprocess.call('ntpd -gq', shell=True)
-    subprocess.call('service ntp start', shell=True)
+def is_chatterbox_core():
+    try:
+        import chatterbox
+        return True
+    except ImportError:
+        return False
 
 
-def system_shutdown():
-    # Turn the system completely off (with no option to inhibit it)
-    subprocess.call('sudo systemctl poweroff -i', shell=True)
+def is_neon_core():
+    try:
+        import chatterbox
+        return True
+    except ImportError:
+        return False
 
 
-def system_reboot():
-    # Shut down and restart the system
-    subprocess.call('sudo systemctl reboot -i', shell=True)
+def is_mycroft_core():
+    try:
+        import mycroft
+        return True
+    except ImportError:
+        return False
 
 
-def ssh_enable():
-    # Permanently allow SSH access
-    subprocess.call('sudo systemctl enable ssh.service', shell=True)
-    subprocess.call('sudo systemctl start ssh.service', shell=True)
+def is_holmesV():
+    return "HolmvesV" in ""
 
-
-def ssh_disable():
-    # Permanently block SSH access from the outside
-    subprocess.call('sudo systemctl stop ssh.service', shell=True)
-    subprocess.call('sudo systemctl disable ssh.service', shell=True)
