@@ -7,6 +7,7 @@ import sysconfig
 from enum import Enum
 import platform
 import socket
+from xdg import BaseDirectory as XDG
 from os.path import expanduser, exists, join, isfile
 
 
@@ -191,6 +192,7 @@ def get_platform_fingerprint():
         "is_gui_installed": is_installed("mycroft-gui-app"),
         "is_vlc_installed": is_installed("vlc"),
         "pulseaudio_running": is_process_running("pulseaudio"),
+        "core_supports_xdg": core_supports_xdg(),
         "core_version": {
             "version_str": get_mycroft_version(),
             "is_chatterbox_core": is_chatterbox_core(),
@@ -264,3 +266,13 @@ def is_holmes():
 
 def is_ovos():
     return "OpenVoiceOS" in (get_mycroft_version() or "")
+
+
+def core_supports_xdg():
+    if any((is_holmes(), is_ovos(), is_neon_core(), is_chatterbox_core())):
+        return True
+    # mycroft-core does not support XDG as of 10 may 2021
+    # however there are patched versions out there, eg, alpine package
+    # check if the .conf exists in new location
+    # TODO deprecate
+    return isfile(join(XDG.save_config_path('mycroft'), 'mycroft.conf'))
