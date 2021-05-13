@@ -30,11 +30,16 @@ class TestJsonHelpers(unittest.TestCase):
         self.assertEqual(flattened_get(dct, "b:d"), 2)
         self.assertEqual(flattened_get(dct, "b.d", separator="."), 2)
 
+        # methods below modify original dict
         flattened_set(dct, "b:d", 5)
-        self.assertEqual(flattened_get(dct, "b:d"), 5)
+        self.assertEqual(dct, {'a': 1, 'b': {'c': 1, "d": 5}})
+        flattened_set(dct, "b.c", 5, separator=".")
+        self.assertEqual(dct, {'a': 1, 'b': {'c': 5, "d": 5}})
 
         flattened_delete(dct, "b:d")
-        self.assertEqual(dct, {'a': 1, 'b': {'c': 1}})
+        self.assertEqual(dct, {'a': 1, 'b': {'c': 5}})
+        flattened_delete(dct, "b.c", separator=".")
+        self.assertEqual(dct, {'a': 1, 'b': {}})
 
     def test_nested_get(self):
         dct = {'a': 1, 'b': {'c': 1, 'd': 2}}
