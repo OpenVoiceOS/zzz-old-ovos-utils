@@ -6,7 +6,7 @@ from os.path import exists
 
 class MycroftEnclosures(str, Enum):
     PICROFT = "picroft"
-    BIGSCREEN = "mycroft_mark_2"  # TODO handle bigscreen
+    BIGSCREEN = "kde"
     OVOS = "OpenVoiceOS"
     OLD_MARK1 = "mycroft_mark_1(old)"
     MARK1 = "mycroft_mark_1"

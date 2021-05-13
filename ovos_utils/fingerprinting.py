@@ -9,7 +9,7 @@ from ovos_utils.system import is_installed, has_screen, \
 
 class MycroftPlatform(str, Enum):
     PICROFT = "picroft"
-    BIGSCREEN = "bigscreen"
+    BIGSCREEN = "kde"
     OVOS = "OpenVoiceOS"
     MARK1 = "mycroft_mark_1"
     MARK2 = "mycroft_mark_2"
@@ -210,6 +210,15 @@ def classify_platform_print(fingerprint=None):
                              'is_ovos': False,
                              'is_mycroft_core': True}
         },
+        MycroftPlatform.OLD_HOLMES: {
+            "core_supports_xdg": False,
+            "core_version": {'version_str': '20.8.1(mycroft-lib)',
+                             'is_chatterbox_core': False,
+                             'is_neon_core': False,
+                             'is_holmes': True,
+                             'is_ovos': False,
+                             'is_mycroft_core': True}
+        },
         MycroftPlatform.CHATTERBOX: {
             "core_supports_xdg": True,
             "core_version": {'is_chatterbox_core': True,
@@ -253,6 +262,10 @@ def classify_platform_print(fingerprint=None):
             "core_supports_xdg": 1.0,
             "core_version": 3.0
         },
+        MycroftPlatform.OLD_HOLMES: {
+            "core_supports_xdg": 1.0,
+            "core_version": 3.0
+        },
         MycroftPlatform.OTHER: {"core_supports_xdg": 0.01}
     }
 
@@ -273,6 +286,7 @@ def classify_platform_print(fingerprint=None):
             # mycroft-core merges the open PR
         },
         MycroftPlatform.HOLMESV: {},
+        MycroftPlatform.OLD_HOLMES: {},
         MycroftPlatform.OTHER: {}
     }
 
@@ -425,6 +439,6 @@ def classify_fingerprint():
     plat = classify_platform_print()
     conf = classify_config_print()
     for k, v in conf.items():
-        # bias for platform
+        # high bias for platform fingerprint
         plat[k] = (v * 0.5 + plat[k] * 1.5) / 2
     return plat
