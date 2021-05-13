@@ -1,7 +1,8 @@
 import unittest
 from copy import deepcopy
 from ovos_utils.json_helper import merge_dict, is_compatible_dict,\
-    nested_delete, nested_set, nested_get, flatten_dict, flattened_get, invert_dict
+    nested_delete, nested_set, nested_get, flatten_dict, flattened_get, \
+    invert_dict, flattened_set, flattened_delete
 
 
 class TestJsonHelpers(unittest.TestCase):
@@ -18,13 +19,22 @@ class TestJsonHelpers(unittest.TestCase):
 
     def test_flatten_dict(self):
         dct = {'a': 1, 'b': {'c': 1, 'd': 2}}
-        self.assertEqual(flatten_dict(dct), {'a': 1, 'b:c': 1, 'b:d': 2})
+
+        self.assertEqual(flatten_dict(dct),
+                         {'a': 1, 'b:c': 1, 'b:d': 2})
         self.assertEqual(flatten_dict(dct, separator="."),
                          {'a': 1, 'b.c': 1, 'b.d': 2})
+
         self.assertEqual(flattened_get(dct, "a"), 1)
         self.assertEqual(flattened_get(dct, "b:c"), 1)
         self.assertEqual(flattened_get(dct, "b:d"), 2)
         self.assertEqual(flattened_get(dct, "b.d", separator="."), 2)
+
+        flattened_set(dct, "b:d", 5)
+        self.assertEqual(flattened_get(dct, "b:d"), 5)
+
+        flattened_delete(dct, "b:d")
+        self.assertEqual(dct, {'a': 1, 'b': {'c': 1}})
 
     def test_nested_get(self):
         dct = {'a': 1, 'b': {'c': 1, 'd': 2}}

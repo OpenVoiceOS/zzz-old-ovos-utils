@@ -52,6 +52,16 @@ def flattened_get(base, key, separator=":"):
     return flatten_dict(base, separator=separator).get(key)
 
 
+def flattened_set(base, key, value, separator=":"):
+    keys = key.split(separator)
+    return nested_set(base, keys, value)
+
+
+def flattened_delete(base, key, separator=":"):
+    keys = key.split(separator)
+    return nested_delete(base, keys)
+
+
 def invert_dict(base):
     return {v: k for k, v in base.items()}
 
