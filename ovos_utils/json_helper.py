@@ -30,7 +30,7 @@ def nested_delete(base, items):
     d = base
     for key in items[:-1]:
         if key not in base:
-            return
+            return base
         d = d[key]
     d.pop(items[-1])
     return base
