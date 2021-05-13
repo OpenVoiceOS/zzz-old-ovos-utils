@@ -18,8 +18,7 @@ def nested_get(base, items):
 
 
 def nested_set(base, items, value):
-    """Set a value in a nested object in base by item sequence.
-    Returns a new dict, does not modify the base dict"""
+    """Set a value in a nested object in base by item sequence."""
     for key in items[:-1]:
         base = base.setdefault(key, {})
     base[items[-1]] = value
@@ -27,11 +26,13 @@ def nested_set(base, items, value):
 
 
 def nested_delete(base, items):
-    """Delete a value in a nested object in base by item sequence.
-    Returns a new dict, does not modify the base dict"""
+    """Delete a value in a nested object in base by item sequence."""
+    d = base
     for key in items[:-1]:
-        base = base.setdefault(key, {})
-    base.pop(items[-1])
+        if key not in base:
+            return
+        d = d[key]
+    d.pop(items[-1])
     return base
 
 
