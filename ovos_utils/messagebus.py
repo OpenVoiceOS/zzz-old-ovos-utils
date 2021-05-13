@@ -26,11 +26,12 @@ class FakeBus:
     def emit(self, message):
         self.received_msgs.append(message)
         # "message" is a special msg_type that captures all messages
+        # these are not message objects, but raw json
         for handler in self.events.get("message", []):
-            handler(message)
+            handler(message.serialize())
         if "message" in self.once_events:
             for handler in self.once_events["message"]:
-                handler(message)
+                handler(message.serialize())
             self.once_events.pop("message")
 
         if message.msg_type in self.events:
