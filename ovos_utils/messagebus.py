@@ -12,6 +12,13 @@ class FakeBus:
         self.events = {}
         self.once_events = {}
         self.received_msgs = []
+        self.skill_id = None
+
+    def bind(self, skill):
+        if isinstance(skill, str):
+            self.skill_id = skill
+        else:
+            self.skill_id = skill.skill_id
 
     def on(self, msg_type, handler):
         if msg_type not in self.events:
@@ -24,6 +31,11 @@ class FakeBus:
         self.once_events[msg_type].append(handler)
 
     def emit(self, message):
+        if self.skill_id is not None:
+            message.context["skill_id"] = self.skill_id
+            message.context["source"] = message.context.get("source") or \
+                                        self.skill_id
+            
         self.received_msgs.append(message)
         # "message" is a special msg_type that captures all messages
         # these are not message objects, but raw json
