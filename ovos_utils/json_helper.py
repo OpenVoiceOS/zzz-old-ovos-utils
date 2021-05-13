@@ -35,9 +35,9 @@ def nested_delete(base, items):
     return base
 
 
-def flatten_dict(mydict, separator=":"):
+def flatten_dict(base, separator=":"):
     new_dict = {}
-    for key, value in mydict.items():
+    for key, value in base.items():
         if isinstance(value, dict):
             new_dict.update(
                 {separator.join([key, k]): v
