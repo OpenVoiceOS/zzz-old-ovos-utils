@@ -25,6 +25,14 @@ class FakeBus:
 
     def emit(self, message):
         self.received_msgs.append(message)
+        # "message" is a special msg_type that captures all messages
+        for handler in self.events.get("message", []):
+            handler(message)
+        if "message" in self.once_events:
+            for handler in self.once_events["message"]:
+                handler(message)
+            self.once_events.pop("message")
+
         if message.msg_type in self.events:
             for handler in self.events[message.msg_type]:
                 handler(message)
