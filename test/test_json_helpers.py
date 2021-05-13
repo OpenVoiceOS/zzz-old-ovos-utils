@@ -1,6 +1,7 @@
 import unittest
 from copy import deepcopy
-from ovos_utils.json_helper import merge_dict, is_compatible_dict, delete_key_from_dict
+from ovos_utils.json_helper import merge_dict, is_compatible_dict,\
+    nested_delete, nested_set, nested_get, flatten_dict
 
 
 class TestJsonHelpers(unittest.TestCase):
@@ -11,15 +12,42 @@ class TestJsonHelpers(unittest.TestCase):
         self.delta_dict = {"two": 2, "three": 30,
                            "four": [4, 5, 6, "foo"], "five": None}
 
-    def test_delete_key_from_dict(self):
+    def test_flatten_dict(self):
         dct = {'a': 1, 'b': {'c': 1, 'd': 2}}
-        self.assertEqual(delete_key_from_dict("b", dct), {'a': 1})
-        self.assertEqual(delete_key_from_dict("a", dct),
-                         {'b': {'c': 1, 'd': 2}})
-        self.assertEqual(delete_key_from_dict("b.c", dct),
-                         {'a': 1, 'b': {'d': 2}})
-        self.assertEqual(delete_key_from_dict("b.d", dct),
-                         {'a': 1, 'b': {'c': 1}})
+        self.assertEqual(flatten_dict(dct), {'a': 1, 'b:c': 1, 'b:d': 2})
+
+    def test_nested_get(self):
+        dct = {'a': 1, 'b': {'c': 1, 'd': 2}}
+        self.assertEqual(nested_get(dct, ["a"]), 1)
+        self.assertEqual(nested_get(dct, ["b"]), {'c': 1, 'd': 2})
+        self.assertEqual(nested_get(dct, ["b", "c"]), 1)
+        self.assertEqual(nested_get(dct, ["b", "d"]), 2)
+
+    def test_nested_set(self):
+        dct = {'a': 1, 'b': {'c': 1, 'd': 2}}
+
+        nested_set(dct, ["a"], 2)
+        self.assertEqual(dct, {'a': 2, 'b': {'c': 1, 'd': 2}})
+        nested_set(dct, ["b", "c"], 5)
+        self.assertEqual(dct, {'a': 2, 'b': {'c': 5, 'd': 2}})
+        nested_set(dct, ["b", "d"], 5)
+        self.assertEqual(dct, {'a': 2, 'b': {'c': 5, 'd': 5}})
+
+    def test_nested_delete(self):
+        dct = {'a': 1, 'b': {'c': 1, 'd': 2}}
+
+        nested_delete(dct, ["a"])
+        self.assertEqual(dct, {'b': {'c': 1, 'd': 2}})
+        nested_delete(dct, ["b", "c"])
+        self.assertEqual(dct, {'b': {'d': 2}})
+        nested_delete(dct, ["b", "d"])
+        self.assertEqual(dct, {'b': {}})
+        nested_delete(dct, ["b"])
+        self.assertEqual(dct, {})
+
+        dct = {'a': 1, 'b': {'c': 1, 'd': 2}}
+        nested_delete(dct, ["b"])
+        self.assertEqual(dct, {"a": 1})
 
     def test_compatible_dict(self):
         d0 = {"k2": 2, "k3": [0, 0], "k4": {"not": "yeah"}}
@@ -74,9 +102,7 @@ class TestJsonHelpers(unittest.TestCase):
             {"one": False, "two": 0, "three": 3, "four": " ", "five": 50}
         )
 
-
     # Difficult to test because order is not currently guaranteed.
-
     def test_merge_dict_no_dupes(self):
 
         self.assertEqual(
