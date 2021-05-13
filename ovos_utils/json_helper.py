@@ -27,6 +27,8 @@ def nested_set(base, items, value):
 
 def nested_delete(base, items):
     """Delete a value in a nested object in base by item sequence."""
+    if not len(items):
+        return base
     d = base
     for key in items[:-1]:
         if key not in base:
