@@ -48,6 +48,10 @@ def flatten_dict(base, separator=":"):
     return new_dict
 
 
+def flattened_get(base, key, separator=":"):
+    return flatten_dict(base, separator=separator).get(key)
+
+
 def invert_dict(base):
     return {v: k for k, v in base.items()}
 
