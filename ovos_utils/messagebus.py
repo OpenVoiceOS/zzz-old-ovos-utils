@@ -13,6 +13,7 @@ class FakeBus:
         self.once_events = {}
         self.received_msgs = []
         self.skill_id = None
+        self.waiting = False
 
     def bind(self, skill):
         if isinstance(skill, str):
@@ -35,8 +36,8 @@ class FakeBus:
             message.context["skill_id"] = self.skill_id
             message.context["source"] = message.context.get("source") or \
                                         self.skill_id
-
-        self.received_msgs.append(message)
+        if self.waiting:
+            self.received_msgs.append(message)
         # "message" is a special msg_type that captures all messages
         # these are not message objects, but raw json
         for handler in self.events.get("message", []):
@@ -64,14 +65,16 @@ class FakeBus:
         Returns:
             The received message or None if the response timed out
         """
+        self.waiting = True
         self.received_msgs = []
         start = time.monotonic()
         while time.monotonic() - start <= timeout:
-            time.sleep(0.1)
             for m in self.received_msgs:
                 print(m.msg_type == message_type, m.msg_type, message_type)
                 if m.msg_type == message_type:
+                    self.waiting = False
                     return m
+        self.waiting = False
         return None
 
     def wait_for_response(self, message, reply_type=None, timeout=3.0):
@@ -88,13 +91,16 @@ class FakeBus:
         """
         reply_type = reply_type or message.msg_type + ".response"
         self.received_msgs = []
+        self.waiting = True
         self.emit(message)
         start = time.monotonic()
         while time.monotonic() - start <= timeout:
-            time.sleep(0.1)
             for m in self.received_msgs:
+                print(m.msg_type == reply_type, m.msg_type, reply_type)
                 if m.msg_type == reply_type:
+                    self.waiting = False
                     return m
+        self.waiting = False
         return None
 
     def remove(self, msg_type, handler):
