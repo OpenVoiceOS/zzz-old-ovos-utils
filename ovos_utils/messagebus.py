@@ -35,7 +35,7 @@ class FakeBus:
             message.context["skill_id"] = self.skill_id
             message.context["source"] = message.context.get("source") or \
                                         self.skill_id
-            
+
         self.received_msgs.append(message)
         # "message" is a special msg_type that captures all messages
         # these are not message objects, but raw json
@@ -64,10 +64,12 @@ class FakeBus:
         Returns:
             The received message or None if the response timed out
         """
+        self.received_msgs = []
         start = time.monotonic()
         while time.monotonic() - start <= timeout:
             time.sleep(0.1)
             for m in self.received_msgs:
+                print(m.msg_type == message_type, m.msg_type, message_type)
                 if m.msg_type == message_type:
                     return m
         return None
@@ -84,9 +86,10 @@ class FakeBus:
         Returns:
             The received message or None if the response timed out
         """
-        start = time.monotonic()
         reply_type = reply_type or message.msg_type + ".response"
+        self.received_msgs = []
         self.emit(message)
+        start = time.monotonic()
         while time.monotonic() - start <= timeout:
             time.sleep(0.1)
             for m in self.received_msgs:
