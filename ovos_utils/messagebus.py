@@ -70,7 +70,6 @@ class FakeBus:
         start = time.monotonic()
         while time.monotonic() - start <= timeout:
             for m in self.received_msgs:
-                print(m.msg_type == message_type, m.msg_type, message_type)
                 if m.msg_type == message_type:
                     self.waiting = False
                     return m
@@ -96,7 +95,6 @@ class FakeBus:
         start = time.monotonic()
         while time.monotonic() - start <= timeout:
             for m in self.received_msgs:
-                print(m.msg_type == reply_type, m.msg_type, reply_type)
                 if m.msg_type == reply_type:
                     self.waiting = False
                     return m
