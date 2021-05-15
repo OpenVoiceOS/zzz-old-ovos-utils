@@ -11,8 +11,6 @@ from threading import Event
 
 class FakeBus:
     def __init__(self, *args, **kwargs):
-        self.events = {}
-        self.once_events = {}
         self.skill_id = None
         self.ee = ExecutorEventEmitter()
         self.ee.on("error", self.on_error)
@@ -24,15 +22,9 @@ class FakeBus:
             self.skill_id = skill.skill_id
 
     def on(self, msg_type, handler):
-        if msg_type not in self.events:
-            self.events[msg_type] = []
-        self.events[msg_type].append(handler)
         self.ee.on(msg_type, handler)
 
     def once(self, msg_type, handler):
-        if msg_type not in self.once_events:
-            self.once_events[msg_type] = []
-        self.once_events[msg_type].append(handler)
         self.ee.once(msg_type, handler)
 
     def emit(self, message):
@@ -96,21 +88,13 @@ class FakeBus:
         return msg
 
     def remove(self, msg_type, handler):
-        if msg_type in self.events:
-            if handler in self.events[msg_type]:
-                self.events[msg_type].remove(handler)
-                self.ee.remove_listener(msg_type, handler)
-        if msg_type in self.once_events:
-            if handler in self.once_events[msg_type]:
-                self.once_events[msg_type].remove(handler)
-                self.ee.remove_listener(msg_type, handler)
+        try:
+            self.ee.remove_listener(msg_type, handler)
+        except:
+            pass
 
     def remove_all_listeners(self, event_name):
         self.ee.remove_all_listeners(event_name)
-        if event_name in self.events:
-            self.events.pop(event_name)
-        if event_name in self.once_events:
-            self.once_events.pop(event_name)
 
     def create_client(self):
         return self
