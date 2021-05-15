@@ -11,15 +11,8 @@ from threading import Event
 
 class FakeBus:
     def __init__(self, *args, **kwargs):
-        self.skill_id = None
         self.ee = ExecutorEventEmitter()
         self.ee.on("error", self.on_error)
-
-    def bind(self, skill):
-        if isinstance(skill, str):
-            self.skill_id = skill
-        else:
-            self.skill_id = skill.skill_id
 
     def on(self, msg_type, handler):
         self.ee.on(msg_type, handler)
@@ -28,10 +21,6 @@ class FakeBus:
         self.ee.once(msg_type, handler)
 
     def emit(self, message):
-        if self.skill_id is not None:
-            message.context["skill_id"] = self.skill_id
-            message.context["source"] = message.context.get("source") or \
-                                        self.skill_id
         self.ee.emit("message", message.serialize())
         self.ee.emit(message.msg_type, message)
 
