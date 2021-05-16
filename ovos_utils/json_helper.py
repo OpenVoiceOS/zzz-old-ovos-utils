@@ -5,36 +5,36 @@ from json_database.utils import is_jsonifiable, get_key_recursively, \
     get_value_recursively, jsonify_recursively
 
 
-def nested_get(base, items):
+def nested_get(base, key_list):
     """Access a nested object in base by item sequence."""
-    if not len(items):
+    if not len(key_list):
         return None
     val = copy(base)
-    for key in items:
+    for key in key_list:
         if key not in val:
             return None
         val = val[key]
     return val
 
 
-def nested_set(base, items, value):
+def nested_set(base, key_list, value):
     """Set a value in a nested object in base by item sequence."""
-    for key in items[:-1]:
+    for key in key_list[:-1]:
         base = base.setdefault(key, {})
-    base[items[-1]] = value
+    base[key_list[-1]] = value
     return base
 
 
-def nested_delete(base, items):
+def nested_delete(base, key_list):
     """Delete a value in a nested object in base by item sequence."""
-    if not len(items):
+    if not len(key_list):
         return base
     d = base
-    for key in items[:-1]:
+    for key in key_list[:-1]:
         if key not in base:
             return base
         d = d[key]
-    d.pop(items[-1])
+    d.pop(key_list[-1])
     return base
 
 
