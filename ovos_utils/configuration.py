@@ -8,11 +8,32 @@ from xdg import BaseDirectory as XDG
 from ovos_utils.fingerprinting import core_supports_xdg, \
     detect_platform, MycroftPlatform, get_config_fingerprint
 
+
+MYCROFT_DEFAULT_CONFIG = join("{ROOT_PATH}", "mycroft",
+                              "configuration", "mycroft.conf")
 MYCROFT_SYSTEM_CONFIG = "/etc/mycroft/mycroft.conf"
 MYCROFT_OLD_USER_CONFIG = join(expanduser("~"), ".mycroft", "mycroft.conf")
 MYCROFT_XDG_USER_CONFIG = join(XDG.save_config_path('mycroft'), 'mycroft.conf')
-
 MYCROFT_USER_CONFIG = MYCROFT_XDG_USER_CONFIG
+
+
+def set_config_name(name, core_folder=None):
+    global MYCROFT_USER_CONFIG, MYCROFT_SYSTEM_CONFIG, \
+        MYCROFT_XDG_USER_CONFIG, MYCROFT_OLD_USER_CONFIG, \
+        MYCROFT_DEFAULT_CONFIG
+
+    core_folder = core_folder or name
+    MYCROFT_DEFAULT_CONFIG = join("{ROOT_PATH}", core_folder,
+                                  "configuration", f"{name}.conf")
+    MYCROFT_SYSTEM_CONFIG = f"/etc/{name}/{name}.conf"
+    MYCROFT_OLD_USER_CONFIG = join(expanduser("~"), f".{name}", f"{name}.conf")
+    MYCROFT_XDG_USER_CONFIG = join(XDG.save_config_path(name), f'{name}.conf')
+    MYCROFT_USER_CONFIG = MYCROFT_XDG_USER_CONFIG
+    LOG.info("config paths changed:\n"
+             f"DEFAULT: {MYCROFT_DEFAULT_CONFIG}\n"
+             f"SYSTEM: {MYCROFT_SYSTEM_CONFIG}\n"
+             f"USER: {MYCROFT_USER_CONFIG}\n"
+             f"OLD_USER: {MYCROFT_OLD_USER_CONFIG}")
 
 
 def read_mycroft_config():
@@ -148,8 +169,7 @@ class MycroftDefaultConfig(ReadOnlyConfig):
         mycroft_root = search_mycroft_core_location()
         if not mycroft_root:
             raise FileNotFoundError("Couldn't find mycroft core root folder.")
-        path = join(mycroft_root, "mycroft",
-                    "configuration", "mycroft.conf")
+        path = MYCROFT_DEFAULT_CONFIG.replace("{ROOT_PATH}", mycroft_root)
         super().__init__(path)
         if not self.path or not isfile(self.path):
             LOG.error("mycroft root path not found, could not load default "

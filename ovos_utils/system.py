@@ -7,6 +7,7 @@ import sysconfig
 from enum import Enum
 
 from os.path import expanduser, exists, join, isfile
+from ovos_utils.log import LOG
 
 
 class MycroftRootLocations(str, Enum):
@@ -17,6 +18,9 @@ class MycroftRootLocations(str, Enum):
     MARK1 = "/opt/venvs/mycroft-core/lib/python3.7/site-packages"
     MARK2 = "/opt/mycroft"
     HOME = expanduser("~/mycroft-core")  # git clones
+
+
+_USER_DEFINED_ROOT = None
 
 
 # system utils
@@ -50,6 +54,12 @@ def ssh_disable():
 
 
 # platform fingerprinting
+def set_root_path(path):
+    global _USER_DEFINED_ROOT
+    _USER_DEFINED_ROOT = path
+    LOG.info(f"mycroft root set to {path}")
+
+
 def find_root_from_sys_path():
     """Find mycroft root folder from sys.path, eg. venv site-packages."""
     for p in [path for path in sys.path if path != '']:
@@ -71,6 +81,9 @@ def find_root_from_sitepackages():
 def search_mycroft_core_location():
     """Check python path (.venv), system packages and finally known mycroft
     locations."""
+    # downstream wants to override the root location
+    if _USER_DEFINED_ROOT:
+        return _USER_DEFINED_ROOT
     # if we are in a .venv that should take precedence over everything else
     if find_root_from_sitepackages():
         return find_root_from_sitepackages()
