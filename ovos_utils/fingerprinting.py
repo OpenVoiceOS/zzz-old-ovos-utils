@@ -329,7 +329,8 @@ def classify_config_print(fingerprint=None):
             'backend_url': 'https://api.mycroft.ai'
         },
         MycroftPlatform.OVOS: {
-            'enclosure': 'OpenVoiceOS'
+            'enclosure': 'OpenVoiceOS',
+            'data_dir': '/opt/ovos'
         },
         MycroftPlatform.MARK1: {
             'backend_url': 'https://api.mycroft.ai',
