@@ -152,7 +152,8 @@ class MycroftUserConfig(LocalConf):
         else:
             path = MYCROFT_USER_CONFIG
             # mark1 runs as a different user
-            if detect_platform() == MycroftPlatform.MARK1:
+            from ovos_utils.fingerprinting import classify_platform_print
+            if classify_platform_print() == MycroftPlatform.MARK1:
                 path = "/home/mycroft/.mycroft/mycroft.conf"
 
         if not isfile(path) and isfile(MYCROFT_OLD_USER_CONFIG):
