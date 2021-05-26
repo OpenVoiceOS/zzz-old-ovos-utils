@@ -152,7 +152,7 @@ class MycroftUserConfig(LocalConf):
             path = MYCROFT_USER_CONFIG
             # mark1 runs as a different user
             sysconfig = MycroftSystemConfig()
-            platform_str = sysconfig.get("enclosure", {}).get("platform")
+            platform_str = sysconfig.get("enclosure", {}).get("platform", "")
             if platform_str == "mycroft_mark_1":
                 path = "/home/mycroft/.mycroft/mycroft.conf"
 
