@@ -18,6 +18,7 @@ _SYSTEM_CONFIG = os.environ.get('MYCROFT_SYSTEM_CONFIG',
 # Make sure we support the old location until mycroft moves to XDG
 _OLD_USER_CONFIG = join(expanduser('~'), '.' + _BASE_FOLDER, _CONFIG_FILE_NAME)
 _USER_CONFIG = join(XDG.xdg_config_home, _BASE_FOLDER, _CONFIG_FILE_NAME)
+_WEB_CONFIG_CACHE = join(XDG.xdg_config_home, _BASE_FOLDER, 'web_cache.json')
 
 
 def get_xdg_base():
@@ -26,11 +27,10 @@ def get_xdg_base():
 
 
 def set_xdg_base(folder_name):
-    global _BASE_FOLDER, WEB_CONFIG_CACHE
-    from mycroft.util.log import LOG
+    global _BASE_FOLDER, _WEB_CONFIG_CACHE
     LOG.info(f"XDG base folder set to: '{folder_name}'")
     _BASE_FOLDER = folder_name
-    WEB_CONFIG_CACHE = join(XDG.xdg_config_home, _BASE_FOLDER, 'web_cache.json')
+    _WEB_CONFIG_CACHE = join(XDG.xdg_config_home, _BASE_FOLDER, 'web_cache.json')
 
 
 def set_config_filename(file_name, core_folder=None):
@@ -97,7 +97,7 @@ def get_config_locations(default=True, web_cache=True, system=True,
     if system:
         locs.append(_SYSTEM_CONFIG)
     if web_cache:
-        locs.append(WEB_CONFIG_CACHE)
+        locs.append(_WEB_CONFIG_CACHE)
     if old_user:
         locs.append(_OLD_USER_CONFIG)
     if user:
