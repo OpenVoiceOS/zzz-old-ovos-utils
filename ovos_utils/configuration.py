@@ -1,12 +1,14 @@
-from os.path import isfile, exists, expanduser, join, dirname, isdir
-from os import makedirs
 import json
-from ovos_utils.log import LOG
-from ovos_utils.json_helper import merge_dict, load_commented_json
-from ovos_utils.system import search_mycroft_core_location
-from xdg import BaseDirectory as XDG
-from ovos_utils.fingerprinting import core_supports_xdg
 import os
+from os import makedirs
+from os.path import isfile, exists, expanduser, join, dirname, isdir
+
+from xdg import BaseDirectory as XDG
+
+from ovos_utils.fingerprinting import core_supports_xdg
+from ovos_utils.json_helper import merge_dict, load_commented_json
+from ovos_utils.log import LOG
+from ovos_utils.system import search_mycroft_core_location
 
 # for downstream support, all XDG paths should respect this
 _BASE_FOLDER = "mycroft"
@@ -14,7 +16,7 @@ _CONFIG_FILE_NAME = "mycroft.conf"
 
 _DEFAULT_CONFIG = None
 _SYSTEM_CONFIG = os.environ.get('MYCROFT_SYSTEM_CONFIG',
-                               f'/etc/{_BASE_FOLDER}/{_CONFIG_FILE_NAME}')
+                                f'/etc/{_BASE_FOLDER}/{_CONFIG_FILE_NAME}')
 # Make sure we support the old location until mycroft moves to XDG
 _OLD_USER_CONFIG = join(expanduser('~'), '.' + _BASE_FOLDER, _CONFIG_FILE_NAME)
 _USER_CONFIG = join(XDG.xdg_config_home, _BASE_FOLDER, _CONFIG_FILE_NAME)
@@ -30,7 +32,8 @@ def set_xdg_base(folder_name):
     global _BASE_FOLDER, _WEB_CONFIG_CACHE
     LOG.info(f"XDG base folder set to: '{folder_name}'")
     _BASE_FOLDER = folder_name
-    _WEB_CONFIG_CACHE = join(XDG.xdg_config_home, _BASE_FOLDER, 'web_cache.json')
+    _WEB_CONFIG_CACHE = join(XDG.xdg_config_home, _BASE_FOLDER,
+                             'web_cache.json')
 
 
 def set_config_filename(file_name, core_folder=None):
@@ -42,7 +45,7 @@ def set_config_filename(file_name, core_folder=None):
     LOG.info(f"config filename set to: '{file_name}'")
     _CONFIG_FILE_NAME = file_name
     _SYSTEM_CONFIG = os.environ.get('MYCROFT_SYSTEM_CONFIG',
-                                   f'/etc/{_BASE_FOLDER}/{_CONFIG_FILE_NAME}')
+                                    f'/etc/{_BASE_FOLDER}/{_CONFIG_FILE_NAME}')
     # Make sure we support the old location still
     # Deprecated and will be removed eventually
     _OLD_USER_CONFIG = join(expanduser('~'), '.' + _BASE_FOLDER,
@@ -68,24 +71,28 @@ def find_default_config():
 
 def find_user_config():
     # ideally it will have been set by downstream using util methods
-    if isfile(_USER_CONFIG):
-        return _USER_CONFIG
+    old, path = get_config_locations(default=False, web_cache=False,
+                                     system=False, old_user=True,
+                                     user=True)
+    if isfile(path):
+        return path
 
     if core_supports_xdg():
-        path = _USER_CONFIG
+        path = join(XDG.xdg_config_home, _BASE_FOLDER, _CONFIG_FILE_NAME)
     else:
-        path = _OLD_USER_CONFIG
+        path = old
         # mark1 runs as a different user
         sysconfig = MycroftSystemConfig()
         platform_str = sysconfig.get("enclosure", {}).get("platform", "")
         if platform_str == "mycroft_mark_1":
             path = "/home/mycroft/.mycroft/mycroft.conf"
 
-    if not isfile(path) and isfile(_OLD_USER_CONFIG):
+    if not isfile(path) and isfile(old):
         # xdg might be disabled in HolmesV compatibility mode
         # or migration might be in progress
         # (user action required when updated from a no xdg install)
-        path = _OLD_USER_CONFIG
+        path = old
+
     return path
 
 
