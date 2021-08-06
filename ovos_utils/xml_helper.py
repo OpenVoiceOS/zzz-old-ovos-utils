@@ -2,7 +2,7 @@ from collections import defaultdict
 from xml.etree import cElementTree as ET
 
 
-def etree2dict(t):
+def etree2dict(t: ET.Element) -> dict:
     d = {t.tag: {} if t.attrib else None}
     children = list(t)
     if children:
@@ -23,7 +23,7 @@ def etree2dict(t):
     return d
 
 
-def xml2dict(xml_string):
+def xml2dict(xml_string: str):
     try:
         xml_string = xml_string.replace('xmlns="http://www.w3.org/1999/xhtml"',
                                         "")

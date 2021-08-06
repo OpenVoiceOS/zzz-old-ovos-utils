@@ -98,7 +98,7 @@ def search_mycroft_core_location():
     return None
 
 
-def get_desktop_environment():
+def get_desktop_environment() -> str:
     # From http://stackoverflow.com/questions/2035657/what-is-my-current-desktop-environment
     # and http://ubuntuforums.org/showthread.php?t=652320
     # and http://ubuntuforums.org/showthread.php?t=652320
@@ -164,7 +164,7 @@ def is_process_running(process):
     return False
 
 
-def find_executable(executable):
+def find_executable(executable) -> str:
     return shutil.which(executable)
 
 
