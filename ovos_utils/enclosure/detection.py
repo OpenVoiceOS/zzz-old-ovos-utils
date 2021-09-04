@@ -1,7 +1,7 @@
 import subprocess
 
 
-def is_mk2():
+def is_mycroft_sj201():
     cmd = 'i2cdetect -y -a 1 0x04 0x04 | egrep "(04|UU)" | awk \'{print $2}\''
     out = subprocess.check_output(cmd, shell=True).strip()
     if out == b"04" or out == b"UU":
