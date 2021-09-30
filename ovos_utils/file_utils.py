@@ -6,7 +6,6 @@ from os import walk
 from os.path import splitext, join, dirname
 
 from ovos_utils.bracket_expansion import expand_options
-from ovos_utils.intents.intent_service_interface import to_alnum, munge_regex
 from ovos_utils.log import LOG
 
 
@@ -135,6 +134,8 @@ def load_regex_from_file(path, skill_id):
         path:       path to vocabulary file (*.voc)
         skill_id:   skill_id to the regex is tied to
     """
+    from ovos_utils.intents.intent_service_interface import munge_regex
+
     regexes = []
     if path.endswith('.rx'):
         with open(path, 'r', encoding='utf8') as reg_file:
@@ -163,6 +164,8 @@ def load_vocabulary(basedir, skill_id):
     Returns:
         dict with intent_type as keys and list of list of lists as value.
     """
+    from ovos_utils.intents.intent_service_interface import to_alnum
+
     vocabs = {}
     for path, _, files in walk(basedir):
         for f in files:
