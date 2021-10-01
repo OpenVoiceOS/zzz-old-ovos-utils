@@ -162,7 +162,12 @@ class IntentServiceInterface:
         Args:
             intent_name(str): Intent reference
         """
-        name = intent_name.split(':')[1]
+        # split skill_id if needed
+        if intent_name not in self and ":" in intent_name:
+            name = intent_name.split(':')[1]
+        else:
+            name = intent_name
+
         if name in self:
             msg = dig_for_message() or Message("")
             if "skill_id" not in msg.context:
@@ -250,6 +255,15 @@ class IntentServiceInterface:
     def __contains__(self, val):
         """Checks if an intent name has been registered."""
         return val in [i[0] for i in self.registered_intents]
+
+    def get_intent_names(self):
+        return [i[0] for i in self.registered_intents]
+
+    def detach_all(self):
+        for name in self.get_intent_names():
+            self.detach_intent(name)
+        self.registered_intents = []
+        self.detached_intents = []
 
     def get_intent(self, intent_name):
         """Get intent from intent_name.
