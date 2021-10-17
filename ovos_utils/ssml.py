@@ -10,7 +10,7 @@ class SSMLBuilder:
         self.speak_tag = speak_tag
         self.ssml_tag = ssml_tag
 
-    def sub(self, alias=None, word=None):
+    def sub(self, alias:str=None, word:str=None):
         if alias is None:
             raise TypeError('Parameter alias must not be None')
         if word is None:
@@ -20,7 +20,7 @@ class SSMLBuilder:
         self.text += "<sub alias='" + alias + "'>" + word + "</sub> "
         return self
 
-    def emphasis(self, level=None, word=None):
+    def emphasis(self, level:str=None, word:str=None):
         if level is None:
             raise TypeError('Parameter level must not be None')
         if word is None:
@@ -31,7 +31,7 @@ class SSMLBuilder:
         self.text += "<emphasis level='" + level + "'>" + word + "</emphasis> "
         return self
 
-    def parts_of_speech(self, word=None, role=None):
+    def parts_of_speech(self, word:str=None, role:str=None):
         """Special considerations when speaking word include usage or role of word"""
         if word is None:
             raise TypeError('Parameter word must not be None')
@@ -40,7 +40,7 @@ class SSMLBuilder:
         self.text += "<w role='" + role + "'>" + word + "</w> "
         return self
 
-    def pause_by_strength(self, strength=None):
+    def pause_by_strength(self, strength:str=None):
         if strength is None:
             raise TypeError('Parameter strength must not be None')
         try:
@@ -51,80 +51,80 @@ class SSMLBuilder:
         self.text += "<break strength=" + strength + "/>"
         return self
 
-    def sentence(self, text=None):
+    def sentence(self, text:str=None):
         """Wrap text with <s> tag"""
         if text is None:
             raise TypeError('Parameter text must not be None')
-        if len(self.text) and not self.text.endswith(" "):
+        if self.text and not self.text.endswith(" "):
             self.text += " "
         self.text += "<s>" + text + "</s> "
         return self
 
-    def say_emphasis(self, text=None):
+    def say_emphasis(self, text:str=None):
         self.emphasis("strong", text)
         return self
 
-    def say_strong(self, text=None):
+    def say_strong(self, text:str=None):
         """Wrap text with <s> tag"""
         if text is None:
             raise TypeError('Parameter text must not be None')
-        if len(self.text) and not self.text.endswith(" "):
+        if self.text and not self.text.endswith(" "):
             self.text += " "
         self.text += "<amazon:effect vocal-tract-length=\"+20%\">" + text\
                      + "</amazon:effect>"
         return self
 
-    def say_weak(self, text=None):
+    def say_weak(self, text:str=None):
         """Wrap text with <s> tag"""
         if text is None:
             raise TypeError('Parameter text must not be None')
-        if len(self.text) and not self.text.endswith(" "):
+        if self.text and not self.text.endswith(" "):
             self.text += " "
         self.text += "<amazon:effect vocal-tract-length=\"-20%\">" + text\
                      + "</amazon:effect> "
         return self
 
-    def say_softly(self, text=None):
+    def say_softly(self, text:str=None):
         """Wrap text with <s> tag"""
         if text is None:
             raise TypeError('Parameter text must not be None')
-        if len(self.text) and not self.text.endswith(" "):
+        if self.text and not self.text.endswith(" "):
             self.text += " "
         self.text += "<amazon:effect phonation=\"soft\">" + text + "</amazon:effect> "
         return self
 
-    def say_auto_breaths(self, text=None):
+    def say_auto_breaths(self, text:str=None):
         """Wrap text with <s> tag"""
         if text is None:
             raise TypeError('Parameter text must not be None')
-        if len(self.text) and not self.text.endswith(" "):
+        if self.text and not self.text.endswith(" "):
             self.text += " "
         self.text += "<amazon:auto-breaths>" + text + "</amazon:auto-breaths>"
         return self
 
-    def paragraph(self, text=None):
+    def paragraph(self, text:str=None):
         """Wrap text with <p> tag"""
         if text is None:
             raise TypeError('Parameter text must not be None')
-        if len(self.text) and not self.text.endswith(" "):
+        if self.text and not self.text.endswith(" "):
             self.text += " "
         self.text += "<p>" + text + "</p> "
         return self
 
-    def audio(self, audio_file=None, text=None):
+    def audio(self, audio_file:str=None, text:str=None):
         if audio_file is None:
             raise TypeError('Parameter audio_file must not be None')
         if text is None:
             raise TypeError('Parameter text must not be None')
-        if len(self.text) and not self.text.endswith(" "):
+        if self.text and not self.text.endswith(" "):
             self.text += " "
         self.text += '<audio src=' + audio_file + '>' + text + '</audio>'
         return self
 
-    def pause(self, time=0, unit="ms"):
+    def pause(self, time:float=0, unit:str="ms"):
         if unit not in ["s", "ms"]:
             raise TypeError("time must be in seconds or miliseconds")
-        if len(self.text) and not self.text.endswith(" "):
+        if self.text and not self.text.endswith(" "):
             self.text += " "
         if time > 0:
             self.text += "<break time=" + str(time) + unit + "/>"
@@ -132,43 +132,43 @@ class SSMLBuilder:
             self.text += "<break />"
         return self
 
-    def prosody(self, attribute=None, text=None):
+    def prosody(self, attribute:str=None, text:str=None):
         if attribute is None:
             raise TypeError('Parameter attribute must not be None')
         if text is None:
             raise TypeError('Parameter text must not be None')
-        if len(self.text) and not self.text.endswith(" "):
+        if self.text and not self.text.endswith(" "):
             self.text += " "
         self.text += "<prosody " + attribute + ">" + text + "</prosody> "
         return self
 
-    def pitch(self, pitch=None, text=None):
+    def pitch(self, pitch=None, text:str=None):
         if pitch is None:
             raise TypeError('Parameter pitch must not be None')
         if text is None:
             raise TypeError('Parameter text must not be None')
-        if len(self.text) and not self.text.endswith(" "):
+        if self.text and not self.text.endswith(" "):
             self.text += " "
         self.text += "<prosody pitch='" + str(
             pitch) + "'>" + text + "</prosody> "
         return self
 
-    def volume(self, volume=None, text=None):
+    def volume(self, volume:str=None, text:str=None):
         if volume is None:
             raise TypeError('Parameter volume must not be None')
         if text is None:
             raise TypeError('Parameter text must not be None')
-        if len(self.text) and not self.text.endswith(" "):
+        if self.text and not self.text.endswith(" "):
             self.text += " "
         self.text += "<prosody volume='" + volume + "'>" + text + "</prosody> "
         return self
 
-    def rate(self, rate=None, text=None):
+    def rate(self, rate=None, text:str=None):
         if rate is None:
             raise TypeError('Parameter rate must not be None')
         if text is None:
             raise TypeError('Parameter text must not be None')
-        if len(self.text) and not self.text.endswith(" "):
+        if self.text and not self.text.endswith(" "):
             self.text += " "
         self.text += "<prosody rate='" + str(rate) + "'>" + text + \
                      "</prosody>"
@@ -215,30 +215,30 @@ class SSMLBuilder:
         self.whisper(text)
         return self
 
-    def phoneme(self, ph=None, text=None):
+    def phoneme(self, ph:str=None, text:str=None):
         if ph is None:
             raise TypeError('Parameter ph must not be None')
         if text is None:
             raise TypeError('Parameter text must not be None')
-        if len(self.text) and not self.text.endswith(" "):
+        if self.text and not self.text.endswith(" "):
             self.text += " "
         self.text += "<phoneme ph=" + ph + ">" + text + "</phoneme> "
         return self
 
-    def voice(self, voice=None, text=None):
+    def voice(self, voice:str=None, text:str=None):
         if voice is None:
             raise TypeError('Parameter voice must not be None')
         if text is None:
             raise TypeError('Parameter text must not be None')
-        if len(self.text) and not self.text.endswith(" "):
+        if self.text and not self.text.endswith(" "):
             self.text += " "
         self.text += "<voice name=" + voice + ">" + text + "</voice> "
         return self
 
-    def whisper(self, text=None):
+    def whisper(self, text:str=None):
         if text is None:
             raise TypeError('Parameter text must not be None')
-        if len(self.text) and not self.text.endswith(" "):
+        if self.text and not self.text.endswith(" "):
             self.text += " "
         self.text += "<whispered>" + text + "</whispered> "
         return self
@@ -252,10 +252,10 @@ class SSMLBuilder:
         return self.text
 
     @staticmethod
-    def remove_ssml(text):
+    def remove_ssml(text:str):
         return re.sub('<[^>]*>', '', text).replace('  ', ' ')
 
     @staticmethod
-    def extract_ssml_tags(text):
+    def extract_ssml_tags(text:str):
         # find ssml tags in string
         return re.findall('<[^>]*>', text)
